@@ -298,11 +298,7 @@ main(int argc, char *argv[])
 		t(zero_semaphore(Q));
 		t(read_shared_memory(read_message));
 		spawn(argv[2], read_message);
-		t(release_semaphore(W, 1, 1));
 		t(acquire_semaphore(S, 1, 1));
-		t(zero_semaphore(S));
-		t(release_semaphore(S, 1, 1));
-		t(acquire_semaphore(W, 1, 1));
 
 	} else if ((argc == 3) && !strcmp(argv[1], "broadcast")) {
 		t(get_keys());
