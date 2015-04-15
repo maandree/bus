@@ -4,6 +4,7 @@
 #include <time.h>
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <sys/ipc.h>
 #include <sys/sem.h>
@@ -61,7 +62,7 @@ get_keys(void)
 
 	line = NULL, len = 0;
 	t(getline(&line, &len, stdin));
-	t(key_sem = (key_t)atoll(line));
+	t(key_shm = (key_t)atoll(line));
 	free(line);
 
 	return 0;
@@ -77,14 +78,16 @@ fail:
 static int
 create_semaphores(void)
 {
-	int id = -1, saved_errno;
+	int id = -1, rint, saved_errno;
+	double r;
 	union semun values;
 
 	values.array = NULL;
 
 	/* Create semaphore array. */
 	for (;;) {
-		double r = (double)rand();
+		rint = rand();
+		r = (double)rint;
 		r /= (double)RAND_MAX + 1;
 		r *= (1 << (8 * sizeof(key_t) - 2)) - 1;
 		key_sem = (key_t)r + 1;
@@ -123,12 +126,14 @@ fail:
 static int
 create_shared_memory(void)
 {
-	int id = -1, saved_errno;
+	int id = -1, rint, saved_errno;
+	double r;
 	struct shmid_ds _info;
 
 	/* Create shared memory. */
 	for (;;) {
-		double r = (double)rand();
+		rint = rand();
+		r = (double)rint;
 		r /= (double)RAND_MAX + 1;
 		r *= (1 << (8 * sizeof(key_t) - 2)) - 1;
 		key_shm = (key_t)r + 1;
@@ -171,18 +176,18 @@ remove_shared_memory(void)
 
 
 static int
-semaphore_op(int semaphore, int delta, int undo)
+semaphore_op(unsigned short semaphore, short delta, int undo)
 {
 	struct sembuf op;
 	op.sem_op = delta;
 	op.sem_num = semaphore;
-	op.sem_flg = undo * SEM_UNDO;
+	op.sem_flg = undo ? SEM_UNDO : 0;
 	return semop(sem_id, &op, 1);
 }
 
 
 static int
-write_semaphore(int semaphore, int value)
+write_semaphore(unsigned short semaphore, int value)
 {
 	union semun semval;
 	semval.val = value;
@@ -197,7 +202,7 @@ read_shared_memory(char *message)
 	int id, saved_errno;
 	void *address = NULL;
 
-	t(shmget(key_shm, MEMORY_SIZE, 0600));
+	t(id = shmget(key_shm, MEMORY_SIZE, 0600));
 	address = shmat(id, NULL, SHM_RDONLY);
 	if ((address == (void *)-1) || !address)
 		goto fail;
@@ -237,25 +242,39 @@ fail:
 }
 
 
+static int
+spawn(const char *command, const char *message)
+{
+	pid_t pid = fork();
+
+	if (pid)
+		return pid == -1 ? -1 : 0;
+
+	setenv("arg", message, 1);
+	execlp("sh", "sh", "-c", command, NULL);
+	perror(argv0);
+	exit(1);
+}
+
+
 int
 main(int argc, char *argv[])
 {
-	const char *message = argc > 2 ? argv[2] : "default message";
 	char read_message[MEMORY_SIZE];
 
 	argv0 = *argv;
 
-	if (!strcmp(argv[1], "create")) {
-		srand(time(NULL));
+	if ((argc == 2) && !strcmp(argv[1], "create")) {
+		srand((unsigned int)time(NULL));
 		t(create_semaphores());
 		t(create_shared_memory());
 
-	} else if (!strcmp(argv[1], "remove")) {
+	} else if ((argc == 2) && !strcmp(argv[1], "remove")) {
 		t(get_keys());
 		t(remove_semaphores());
 		t(remove_shared_memory());
 
-	} else if (!strcmp(argv[1], "listen")) {
+	} else if ((argc == 3) && !strcmp(argv[1], "listen")) {
 		t(get_keys());
 		t(open_semaphore());
 		t(release_semaphore(S, 1, 1));
@@ -263,7 +282,7 @@ main(int argc, char *argv[])
 			t(release_semaphore(Q, 1, 0));
 			t(zero_semaphore(Q));
 			t(read_shared_memory(read_message));
-			printf("%s\n", read_message);
+			t(spawn(argv[2], read_message));
 			t(release_semaphore(W, 1, 1));
 			t(acquire_semaphore(S, 1, 1));
 			t(zero_semaphore(S));
@@ -271,12 +290,26 @@ main(int argc, char *argv[])
 			t(acquire_semaphore(W, 1, 1));
 		}
 
-	} else if (!strcmp(argv[1], "broadcast")) {
+	} else if ((argc == 3) && !strcmp(argv[1], "wait")) {
+		t(get_keys());
+		t(open_semaphore());
+		t(release_semaphore(S, 1, 1));
+		t(release_semaphore(Q, 1, 0));
+		t(zero_semaphore(Q));
+		t(read_shared_memory(read_message));
+		spawn(argv[2], read_message);
+		t(release_semaphore(W, 1, 1));
+		t(acquire_semaphore(S, 1, 1));
+		t(zero_semaphore(S));
+		t(release_semaphore(S, 1, 1));
+		t(acquire_semaphore(W, 1, 1));
+
+	} else if ((argc == 3) && !strcmp(argv[1], "broadcast")) {
 		t(get_keys());
 		t(open_semaphore());
 		t(acquire_semaphore(X, 1, 1));
 		t(zero_semaphore(W));
-		t(write_shared_memory(message));
+		t(write_shared_memory(argv[2]));
 		t(write_semaphore(Q, 0));
 		t(zero_semaphore(S));
 		t(release_semaphore(X, 1, 1));
