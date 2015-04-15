@@ -143,25 +143,7 @@ remove_shared_memory(key_t key)
 
 
 static int
-acquire_semaphore(key_t key, int semaphore, int delta, int undo)
-{
-	struct sembuf op;
-	int id;
-
-	id = semget(key, SEMAPHORES, 0600);
-	if (id == -1)
-		return -1;
-
-	op.sem_op = -delta;
-	op.sem_num = semaphore;
-	op.sem_flg = undo * SEM_UNDO;
-
-	return semop(id, &op, 1);
-}
-
-
-static int
-release_semaphore(key_t key, int semaphore, int delta, int undo)
+semaphore_op(key_t key, int semaphore, int delta, int undo)
 {
 	struct sembuf op;
 	int id;
@@ -178,50 +160,9 @@ release_semaphore(key_t key, int semaphore, int delta, int undo)
 }
 
 
-static int
-zero_semaphore(key_t key, int semaphore)
-{
-	struct sembuf op;
-	int id;
-
-	id = semget(key, SEMAPHORES, 0600);
-	if (id == -1)
-		return -1;
-
-	op.sem_op = 0;
-	op.sem_num = semaphore;
-	op.sem_flg = 0;
-
-	return semop(id, &op, 1);
-}
-
-
-static int
-read_semaphore(key_t key, int semaphore, int *z, int *n, int *v)
-{
-	int id, r;
-
-	id = semget(key, SEMAPHORES, 0600);
-	if (id == -1)
-		return -1;
-
-	if (r = semctl(id, semaphore, GETZCNT), r == -1)
-		return -1;
-	if (z)
-		*z = r;
-
-	if (r = semctl(id, semaphore, GETNCNT), r == -1)
-		return -1;
-	if (n)
-		*n = r;
-
-	if (r = semctl(id, semaphore, GETVAL), r == -1)
-		return -1;
-	if (v)
-		*v = r;
-
-	return 0;
-}
+#define acquire_semaphore(key, semaphore, delta, undo)  semaphore_op(key, semaphore, -delta, undo)
+#define release_semaphore(key, semaphore, delta, undo)  semaphore_op(key, semaphore, +delta, undo)
+#define    zero_semaphore(key, semaphore)               semaphore_op(key, semaphore, 0, 0)
 
 
 static int
