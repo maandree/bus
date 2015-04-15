@@ -20,10 +20,10 @@ union semun {
 
 
 #define S 0
-#define P 0
-#define Q 1
+#define P 1
+#define Q 2
 
-#define SEMAPHORES 2
+#define SEMAPHORES 3
 #define MEMORY_SIZE (2 * 1024)
 
 
