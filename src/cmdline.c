@@ -212,7 +212,7 @@ fail:
 int
 main(int argc, char *argv[])
 {
-	int saved_errno, value;
+	int saved_errno;
 	key_t key_sem = argc > 2 ? (key_t)atoll(argv[2]) : 0;
 	key_t key_shm = argc > 3 ? (key_t)atoll(argv[3]) : 0;
 	const char *message = argc > 4 ? argv[4] : "default message";
