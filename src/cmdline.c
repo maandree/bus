@@ -28,7 +28,20 @@ union semun {
 #define MEMORY_SIZE (2 * 1024)
 
 
+#define    open_semaphore(key)                     ((sem_id = semget(key, SEMAPHORES, 0600)) == -1 ? -1 : 0)
+#define acquire_semaphore(semaphore, delta, undo)  semaphore_op(semaphore, -delta, undo)
+#define release_semaphore(semaphore, delta, undo)  semaphore_op(semaphore, +delta, undo)
+#define    zero_semaphore(semaphore)               semaphore_op(semaphore, 0, 0)
+
+
+#define t(inst)  if ((inst) == -1)  goto fail
+
+
+
 char *argv0;
+
+static int sem_id = -1;
+
 
 
 static int
@@ -85,6 +98,7 @@ create_shared_memory(void)
 	int id = -1, saved_errno;
 	struct shmid_ds _info;
 
+	/* Create shared memory. */
 	for (;;) {
 		double r = (double)rand();
 		r /= (double)RAND_MAX + 1;
@@ -115,69 +129,38 @@ static int
 remove_semaphores(key_t key)
 {
 	int id = semget(key, SEMAPHORES, 0600);
-
-	if (id == -1)
-		return -1;
-
-	if (semctl(id, 0, IPC_RMID) == -1)
-		return -1;
-
-	return 0;
+	return ((id == -1) || (semctl(id, 0, IPC_RMID) == -1)) ? -1 : 0;
 }
 
 
 static int
 remove_shared_memory(key_t key)
 {
-	int id = shmget(key, MEMORY_SIZE, 0600);
 	struct shmid_ds _info;
-
-	if (id == -1)
-		return -1;
-
-	if (shmctl(id, IPC_RMID, &_info) == -1)
-		return -1;
-
-	return 0;
+	int id = shmget(key, MEMORY_SIZE, 0600);
+	return ((id == -1) || (shmctl(sem_id, IPC_RMID, &_info) == -1)) ? -1 : 0;
 }
 
 
 static int
-semaphore_op(key_t key, int semaphore, int delta, int undo)
+semaphore_op(int semaphore, int delta, int undo)
 {
 	struct sembuf op;
-	int id;
-
-	id = semget(key, SEMAPHORES, 0600);
-	if (id == -1)
-		return -1;
-
 	op.sem_op = delta;
 	op.sem_num = semaphore;
 	op.sem_flg = undo * SEM_UNDO;
-
-	return semop(id, &op, 1);
+	return semop(sem_id, &op, 1);
 }
-
-
-#define acquire_semaphore(key, semaphore, delta, undo)  semaphore_op(key, semaphore, -delta, undo)
-#define release_semaphore(key, semaphore, delta, undo)  semaphore_op(key, semaphore, +delta, undo)
-#define    zero_semaphore(key, semaphore)               semaphore_op(key, semaphore, 0, 0)
 
 
 static int
-write_semaphore(key_t key, int semaphore, int value)
+write_semaphore(int semaphore, int value)
 {
 	union semun semval;
-	int id;
-
-	id = semget(key, SEMAPHORES, 0600);
-	if (id == -1)
-		return -1;
-
 	semval.val = value;
-	return semctl(id, semaphore, SETVAL, semval);
+	return semctl(sem_id, semaphore, SETVAL, semval);
 }
+
 
 
 static int
@@ -186,19 +169,12 @@ read_shared_memory(key_t key, char *message)
 	int id, saved_errno;
 	void *address = NULL;
 
-	id = shmget(key, MEMORY_SIZE, 0600);
-	if (id == -1)
-		goto fail;
-
+	t(shmget(key, MEMORY_SIZE, 0600));
 	address = shmat(id, NULL, SHM_RDONLY);
 	if ((address == (void *)-1) || !address)
 		goto fail;
-
 	strncpy(message, address, MEMORY_SIZE);
-
-	if (shmdt(address) == -1)
-		goto fail;
-
+	t(shmdt(address));
 	return 0;
 
 fail:
@@ -216,19 +192,12 @@ write_shared_memory(key_t key, const char *message)
 	int id, saved_errno;
 	void *address = NULL;
 
-	id = shmget(key, MEMORY_SIZE, 0600);
-	if (id == -1)
-		goto fail;
-
+	t(id = shmget(key, MEMORY_SIZE, 0600));
 	address = shmat(id, NULL, 0);
 	if ((address == (void *)-1) || !address)
 		goto fail;
-
 	memcpy(address, message, (strlen(message) + 1) * sizeof(char));
-
-	if (shmdt(address) == -1)
-		goto fail;
-
+	t(shmdt(address));
 	return 0;
 
 fail:
@@ -240,13 +209,10 @@ fail:
 }
 
 
-#define t(inst)  if (r = inst, r)  goto fail
-
-
 int
 main(int argc, char *argv[])
 {
-	int r = -1, saved_errno, value;
+	int saved_errno, value;
 	key_t key_sem = argc > 2 ? (key_t)atoll(argv[2]) : 0;
 	key_t key_shm = argc > 3 ? (key_t)atoll(argv[3]) : 0;
 	const char *message = argc > 4 ? argv[4] : "default message";
@@ -261,29 +227,31 @@ main(int argc, char *argv[])
 
 	} else if (!strcmp(argv[1], "remove")) {
 		t(remove_semaphores(key_sem));
-		t(remove_shared_memory(key_sem));
+		t(remove_shared_memory(key_shm));
 
 	} else if (!strcmp(argv[1], "listen")) {
-		t(release_semaphore(key_sem, S, 1, 1));
+		t(open_semaphore(key_sem));
+		t(release_semaphore(S, 1, 1));
 		for (;;) {
-			t(release_semaphore(key_sem, Q, 1, 0));
-			t(zero_semaphore(key_sem, Q));
+			t(release_semaphore(Q, 1, 0));
+			t(zero_semaphore(Q));
 			t(read_shared_memory(key_shm, read_message));
 			printf("%s\n", read_message);
-			t(release_semaphore(key_sem, W, 1, 1));
-			t(acquire_semaphore(key_sem, S, 1, 1));
-			t(zero_semaphore(key_sem, S));
-			t(release_semaphore(key_sem, S, 1, 1));
-			t(acquire_semaphore(key_sem, W, 1, 1));
+			t(release_semaphore(W, 1, 1));
+			t(acquire_semaphore(S, 1, 1));
+			t(zero_semaphore(S));
+			t(release_semaphore(S, 1, 1));
+			t(acquire_semaphore(W, 1, 1));
 		}
 
 	} else if (!strcmp(argv[1], "broadcast")) {
-		t(acquire_semaphore(key_sem, X, 1, 1));
-		t(zero_semaphore(key_sem, W));
+		t(open_semaphore(key_sem));
+		t(acquire_semaphore(X, 1, 1));
+		t(zero_semaphore(W));
 		t(write_shared_memory(key_shm, message));
-		t(write_semaphore(key_sem, Q, 0));
-		t(zero_semaphore(key_sem, S));
-		t(release_semaphore(key_sem, X, 1, 1));
+		t(write_semaphore(Q, 0));
+		t(zero_semaphore(S));
+		t(release_semaphore(X, 1, 1));
 
 	} else
 		return 2;
