@@ -161,7 +161,7 @@ fail:
 static int
 remove_semaphores(void)
 {
-	int id = semget(key_shm, SEMAPHORES, 0600);
+	int id = semget(key_sem, SEMAPHORES, 0600);
 	return ((id == -1) || (semctl(id, 0, IPC_RMID) == -1)) ? -1 : 0;
 }
 
