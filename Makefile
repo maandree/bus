@@ -10,7 +10,12 @@ LIB_VERSION = ${LIB_MAJOR}.${LIB_MINOR}
 
 all: bus
 
-bus: bin/bus bin/libbus.so.$(LIB_VERSION) bin/libbus.so.$(LIB_MAJOR) bin/libbus.so
+bus: bin/bus bin/libbus.so.$(LIB_VERSION) bin/libbus.so.$(LIB_MAJOR) bin/libbus.so bin/libbus.a
+
+bin/libbus.a: obj/bus-fpic.o
+	@echo AR $@
+	@mkdir -p bin
+	@ar rcs $@ $^
 
 bin/bus: obj/cmdline-nofpic.o obj/bus-nofpic.o
 	@echo CC -o $@
