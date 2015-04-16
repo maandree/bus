@@ -409,6 +409,9 @@ fail:
  * @param   bus    Bus information to fill
  * @param   file   The filename of the bus
  * @param   flags  `BUS_RDONLY`, `BUS_WRONLY` or `BUS_RDWR`
+ *                 any negative value is used internally
+ *                 for telling the function to not actually
+ *                 opening the bus, but just to parse the file
  * @return         0 on success, -1 on error
  */
 int

@@ -113,7 +113,8 @@ int bus_unlink(const char *file);
  * 
  * @param   bus    Bus information to fill
  * @param   file   The filename of the bus
- * @param   flags  `BUS_RDONLY`, `BUS_WRONLY` or `BUS_RDWR`
+ * @param   flags  `BUS_RDONLY`, `BUS_WRONLY` or `BUS_RDWR`,
+ *                 the value must not be negative
  * @return         0 on success, -1 on error
  */
 int bus_open(bus_t *bus, const char *file, int flags);
