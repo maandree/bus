@@ -6,7 +6,7 @@ libbus - A simple daemonless system for broadcasting messages locally
 .SH RATIONALE
 We need an interprocess communication system similar to message queues. But it we need broadcasting rather than anycasting, so we have a fast, simple and daemonless system for announcing events to all processes whom might be interested.
 .SH FUTURE DIRECTION
-Perhaps the ability to have groups and other permissions on bus, so they can be shared among users and be system-wide. Private and abstract buses might be interesting too.
+Perhaps the ability to have groups and other permissions on bus, so they can be shared among users and be system-wide. Private and abstract buses might be interesting too, as well as timed out read and writes, and non-blocking writes.
 .SH SEE ALSO
 bus(1), bus(5), bus_create(3), bus_unlink(3), bus_open(3), bus_close(3), bus_read(3), bus_write(3)
 .SH AUTHORS
