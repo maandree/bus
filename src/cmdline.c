@@ -21,11 +21,12 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
+#include "bus.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
-#include "bus.h"
+#include <string.h>
 
 
 
@@ -108,18 +109,19 @@ int
 main(int argc, char *argv[])
 {
 	bus_t bus;
+	char *file;
 
 	argv0 = *argv;
 
 	/* Create a new bus with selected name. */
 	if ((argc == 3) && !strcmp(argv[1], "create")) {
-		t(bus_create(argv[2], 0) ? 0 : -1);
+		t(bus_create(argv[2], 0, NULL));
 
 	/* Create a new bus with random name. */
 	} else if ((argc == 2) && !strcmp(argv[1], "create")) {
-		const char *file = bus_create(NULL, 0);
-		t(file ? 0 : -1);
+		t(bus_create(NULL, 0, &file));
 		printf("%s\n", file);
+		free(file);
 
 	/* Remove a bus. */
 	} else if ((argc == 3) && !strcmp(argv[1], "remove")) {

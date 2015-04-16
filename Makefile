@@ -13,7 +13,7 @@ bin/bus: obj/cmdline.o obj/bus.o
 obj/%.o: src/%.c src/*.h
 	@echo CC -c $<
 	@mkdir -p obj
-	@${CC} -Wall -Wextra -pedantic -c -o $@ ${CPPFLAGS} ${CFLAGS} $<
+	@${CC} -Wall -Wextra -pedantic -std=c99 -c -o $@ ${CPPFLAGS} ${CFLAGS} $<
 
 clean:
 	@echo cleaning

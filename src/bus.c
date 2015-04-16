@@ -30,6 +30,9 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include <sys/ipc.h>
 #include <sys/sem.h>
@@ -40,37 +43,37 @@
 /**
  * Semaphore used to signal `bus_write` that `bus_read` is ready
  */
-#define S 0
+#define S  0
 
 /**
  * Semaphore for making `bus_write` wait while `bus_read` is reseting `S`
  */
-#define W 1
+#define W  1
 
 /**
  * Binary semaphore for making `bus_write` exclusively locked
  */
-#define X 2
+#define X  2
 
 /**
  * Semaphore used to cue `bus_read` that it may read the shared memory
  */
-#define Q 3
+#define Q  3
 
 /**
  * The number of semaphores in the semaphore array
  */
-#define BUS_SEMAPHORES 4
+#define BUS_SEMAPHORES  4
 
 
 
 /**
  * Decrease the value of a semaphore by 1
  * 
- * @param   bus:const bus_t *         The bus
- * @param   semaphore:unsigned short  The index of the semaphore, `S`, `W`, `X` or `Q`
- * @param   flags:short               `SEM_UNDO` if the action should be undone when the program exits
- * @return  :int                      0 on success, -1 on error
+ * @param   bus:const bus_t *  The bus
+ * @param   semaphore:int      The index of the semaphore, `S`, `W`, `X` or `Q`
+ * @param   flags:int          `SEM_UNDO` if the action should be undone when the program exits
+ * @return  :int               0 on success, -1 on error
  */
 #define acquire_semaphore(bus, semaphore, flags) \
 	semaphore_op(bus, semaphore, -1, flags)
@@ -78,10 +81,10 @@
 /**
  * Increase the value of a semaphore by 1
  * 
- * @param   bus:const bus_t *         The bus
- * @param   semaphore:unsigned short  The index of the semaphore, `S`, `W`, `X` or `Q`
- * @param   flags:short               `SEM_UNDO` if the action should be undone when the program exits
- * @return  :int                      0 on success, -1 on error
+ * @param   bus:const bus_t *  The bus
+ * @param   semaphore:int      The index of the semaphore, `S`, `W`, `X` or `Q`
+ * @param   flags:int          `SEM_UNDO` if the action should be undone when the program exits
+ * @return  :int               0 on success, -1 on error
  */
 #define release_semaphore(bus, semaphore, flags) \
 	semaphore_op(bus, semaphore, +1, flags)
@@ -89,9 +92,9 @@
 /**
  * Wait for the value of a semphore to become 0
  * 
- * @param   bus:const bus_t *         The bus
- * @param   semaphore:unsigned short  The index of the semaphore, `S`, `W`, `X` or `Q`
- * @return  :int                      0 on success, -1 on error
+ * @param   bus:const bus_t *  The bus
+ * @param   semaphore:int      The index of the semaphore, `S`, `W`, `X` or `Q`
+ * @return  :int               0 on success, -1 on error
  */
 #define zero_semaphore(bus, semaphore) \
 	semaphore_op(bus, semaphore, 0, 0)
@@ -167,7 +170,7 @@ create_semaphores(bus_t *bus)
 	}
 
 	/* Initialise the array. */
-	values.array = calloc(BUS_SEMAPHORES, sizeof(unsigned short));
+	values.array = calloc((size_t)BUS_SEMAPHORES, sizeof(unsigned short));
 	values.array[X] = 1;
 	if (!values.array)
 		goto fail;
@@ -210,7 +213,7 @@ create_shared_memory(bus_t *bus)
 		bus->key_shm = (key_t)r + 1;
 		if (bus->key_shm == IPC_PRIVATE)
 			continue;
-		id = shmget(bus->key_shm, BUS_MEMORY_SIZE, IPC_CREAT | IPC_EXCL | 0600);
+		id = shmget(bus->key_shm, (size_t)BUS_MEMORY_SIZE, IPC_CREAT | IPC_EXCL | 0600);
 		if (id != -1)
 			break;
 		if ((errno != EEXIST) && (errno != EINTR))
@@ -252,7 +255,7 @@ static int
 remove_shared_memory(const bus_t *bus)
 {
 	struct shmid_ds _info;
-	int id = shmget(bus->key_shm, BUS_MEMORY_SIZE, 0600);
+	int id = shmget(bus->key_shm, (size_t)BUS_MEMORY_SIZE, 0600);
 	return ((id == -1) || (shmctl(id, IPC_RMID, &_info) == -1)) ? -1 : 0;
 }
 
@@ -267,13 +270,13 @@ remove_shared_memory(const bus_t *bus)
  * @return             0 on success, -1 on error
  */
 static int
-semaphore_op(const bus_t *bus, unsigned short semaphore, short delta, short flags)
+semaphore_op(const bus_t *bus, int semaphore, int delta, int flags)
 {
 	struct sembuf op;
-	op.sem_op = delta;
-	op.sem_num = semaphore;
-	op.sem_flg = flags;
-	return semop(bus->sem_id, &op, 1);
+	op.sem_num = (unsigned short)semaphore;
+	op.sem_op = (short)delta;
+	op.sem_flg = (short)flags;
+	return semop(bus->sem_id, &op, (size_t)1);
 }
 
 
@@ -286,11 +289,11 @@ semaphore_op(const bus_t *bus, unsigned short semaphore, short delta, short flag
  * @return             0 on success, -1 on error
  */
 static int
-write_semaphore(const bus_t *bus, unsigned short semaphore, int value)
+write_semaphore(const bus_t *bus, unsigned semaphore, int value)
 {
 	union semun semval;
 	semval.val = value;
-	return semctl(bus->sem_id, semaphore, SETVAL, semval);
+	return semctl(bus->sem_id, (unsigned short)semaphore, SETVAL, semval);
 }
 
 
@@ -306,7 +309,7 @@ open_shared_memory(bus_t *bus, int flags)
 {
 	int id;
 	void *address;
-	t(id = shmget(bus->key_shm, BUS_MEMORY_SIZE, 0600));
+	t(id = shmget(bus->key_shm, (size_t)BUS_MEMORY_SIZE, 0600));
 	address = shmat(id, NULL, (flags & BUS_RDONLY) ? SHM_RDONLY : 0);
 	if ((address == (void *)-1) || !address)
 		goto fail;
@@ -334,21 +337,48 @@ fail:
 }
 
 
+/**
+ * Get a random ASCII letter or digit
+ * 
+ * @return  A random ASCII letter or digit
+ */
+static char
+randomchar(void)
+{
+	int rint = rand();
+	double r = (double)rint;
+	r /= (double)RAND_MAX + 1;
+	r *= 10 + 26 + 26;
+	return "0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM"[(int)r];
+}
+
+
 
 /**
  * Create a new bus
  * 
- * @param   file   The pathname of the bus, `NULL` to create a random one
- * @param   flags  `BUS_EXCL` (if `file` is not `NULL`) to fail if the file
- *                 already exists, otherwise if the file exists, nothing
- *                 will happen
- * @return         The pathname of the bus, `NULL` on error
+ * @param   file      The pathname of the bus, `NULL` to create a random one
+ * @param   flags     `BUS_EXCL` (if `file` is not `NULL`) to fail if the file
+ *                    already exists, otherwise if the file exists, nothing
+ *                    will happen;
+ *                    `BUS_INTR` to fail if interrupted
+ * @param   out_file  Output parameter for the pathname of the bus
+ * @return            0 on success, -1 on error
  */
-const char *
-bus_create(const char *file, int flags)
+int
+bus_create(const char *file, int flags, char **out_file)
 {
-	int saved_errno;
+	int fd = -1, saved_errno;
 	bus_t bus;
+	char buf[1 + 2 * (3 * sizeof(ssize_t) + 2)];
+	size_t ptr, len;
+	ssize_t wrote;
+	char *genfile = NULL;
+	const char *env;
+
+	if (out_file)
+		*out_file = NULL;
+
 	bus.sem_id = -1;
 	bus.key_sem = -1;
 	bus.key_shm = -1;
@@ -356,11 +386,60 @@ bus_create(const char *file, int flags)
 
 	srand((unsigned int)time(NULL) + (unsigned int)rand());
 
-	/* TODO */ (void) file; (void) flags;
+	if (file) {
+		fd = open(file, O_CREAT | O_EXCL);
+		if (fd == -1) {
+			if ((errno != EEXIST) || (flags & BUS_EXCL))
+				return -1;
+			goto done;
+		}
+	} else {
+		env = getenv("XDG_RUNTIME_DIR");
+		if (!env || !*env)
+			env = "/run";
+		genfile = malloc((strlen(env) + 6 + 7 + 30) * sizeof(char));
+		if (!genfile)
+			goto fail;
+		if (out_file)
+			*out_file = genfile;
+		sprintf(genfile, "%s/run/random.", env);
+		len = strlen(genfile);
+		genfile[len + 30] = '\0';
+	retry:
+		for (ptr = 0; ptr < 30; ptr++)
+			genfile[len + ptr] = randomchar();
+		fd = open(genfile, O_CREAT | O_EXCL);
+		if (fd == -1) {
+			if (errno == EEXIST)
+				goto retry;
+			return -1;
+		}
+	}
 
 	t(create_semaphores(&bus));
 	t(create_shared_memory(&bus));
-	return NULL;
+
+	sprintf(buf, "%zi\n%zi\n", (ssize_t)(bus.key_sem), (ssize_t)(bus.key_shm));
+	for (len = strlen(buf), ptr = 0; ptr < len;) {
+		wrote = write(fd, buf + ptr, len - ptr);
+		if (wrote < 0) {
+			if ((errno == EINTR) && (flags & BUS_INTR))
+				goto fail;
+		} else {
+			ptr += (size_t)wrote;
+		}
+	}
+	close(fd);
+
+done:
+	if (out_file && !*out_file) {
+		len = strlen(file) + 1;
+		*out_file = malloc(len * sizeof(char));
+		memcpy(*out_file, file, len * sizeof(char));
+	} else if (!out_file) {
+		free(genfile);
+	}
+	return 0;
 
 fail:
 	saved_errno = errno;
@@ -368,8 +447,14 @@ fail:
 		remove_semaphores(&bus);
 	if (bus.key_shm)
 		remove_shared_memory(&bus);
+	if (fd == -1)
+		close(fd);
+	if (out_file)
+		*out_file = NULL;
+	free(genfile);
+	unlink(file);
 	errno = saved_errno;
-	return NULL;
+	return -1;
 }
 
 

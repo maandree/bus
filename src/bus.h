@@ -25,6 +25,9 @@
 #define BUS_H
 
 
+#ifndef _DEFAULT_SOURCE
+# define _DEFAULT_SOURCE
+#endif
 #include <sys/types.h>
 
 
@@ -48,6 +51,11 @@
  * Fail to create bus if its file already exists
  */
 #define BUS_EXCL    2
+
+/**
+ * Fail if interrupted
+ */
+#define BUS_INTR    4
 
 
 
@@ -91,13 +99,15 @@ typedef struct bus
 /**
  * Create a new bus
  * 
- * @param   file   The pathname of the bus, `NULL` to create a random one
- * @param   flags  `BUS_EXCL` (if `file` is not `NULL`) to fail if the file
- *                 already exists, otherwise if the file exists, nothing
- *                 will happen
- * @return         The pathname of the bus, `NULL` on error
+ * @param   file      The pathname of the bus, `NULL` to create a random one
+ * @param   flags     `BUS_EXCL` (if `file` is not `NULL`) to fail if the file
+ *                    already exists, otherwise if the file exists, nothing
+ *                    will happen;
+ *                    `BUS_INTR` to fail if interrupted
+ * @param   out_file  Output parameter for the pathname of the bus
+ * @return            0 on success, -1 on error
  */
-const char *bus_create(const char *file, int flags);
+int bus_create(const char *file, int flags, char **out_file);
 
 /**
  * Remove a bus
