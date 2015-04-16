@@ -88,13 +88,71 @@ typedef struct bus
 
 
 
+/**
+ * Create a new bus
+ * 
+ * @param   file   The pathname of the bus, `NULL` to create a random one
+ * @param   flags  `BUS_EXCL` (if `file` is not `NULL`) to fail if the file
+ *                 already exists, otherwise if the file exists, nothing
+ *                 will happen
+ * @return         The pathname of the bus, `NULL` on error
+ */
 const char *bus_create(const char *file, int flags);
+
+/**
+ * Remove a bus
+ * 
+ * @param   file  The pathname of the bus
+ * @return        0 on success, -1 on error
+ */
 int bus_unlink(const char *file);
 
+
+/**
+ * Open an existing bus
+ * 
+ * @param   bus    Bus information to fill
+ * @param   file   The filename of the bus
+ * @param   flags  `BUS_RDONLY`, `BUS_WRONLY` or `BUS_RDWR`
+ * @return         0 on success, -1 on error
+ */
 int bus_open(bus_t *bus, const char *file, int flags);
+
+/**
+ * Close a bus
+ * 
+ * @param   bus  Bus information
+ * @return       0 on success, -1 on error
+ */
 int bus_close(bus_t *bus);
 
+
+/**
+ * Broadcast a message a bus
+ * 
+ * @param   bus      Bus information
+ * @param   message  The message to write, may not be longer than
+ *                   `BUS_MEMORY_SIZE` including the NUL-termination
+ * @return           0 on success, -1 on error
+ */
 int bus_write(const bus_t *bus, const char *message);
+
+/**
+ * Listen (in a loop, forever) for new message on a bus
+ * 
+ * @param   bus       Bus information
+ * @param   callback  Function to call when a message is received, the
+ *                    input parameters will be the read message and
+ *                    `user_data` from `bus_read`'s parameter with the
+ *                    same name. The message must have been parsed or
+ *                    copied when `callback` returns as it may be over
+ *                    overridden after that time. `callback` should
+ *                    return either of the the values:
+ *                      *  0:  stop listening
+ *                      *  1:  continue listening
+ *                      * -1:  an error has occurred
+ * @return            0 on success, -1 on error
+ */
 int bus_read(const bus_t *bus, int (*callback)(const char *message, void *user_data), void *user_data);
 
 
