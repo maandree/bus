@@ -9,6 +9,19 @@ int bus_unlink(const char *file);
 The \fIbus_unlink\fP function shall remove the bus assoicated with the pathname stored in \fIfile\fP. The \fIbus_unlink\fP function shall also unlink the file.
 .SH RETURN VALUES
 Upon successful completion, the function shall return 0. Otherwise the function shall return -1 and set \fIerrno\fP to indicate the error.
+.SH ERRORS
+.TP
+.IR EINVAL
+The bus does not exist.
+.TP
+.IR EACCES
+Operation permission is denied to the calling process.
+.TP
+.IR EPERM
+The user does not have permission to remove the bus.
+.SH
+
+The \fIbus_unlink\fP() function may also fail and set \fIerrno\fP to any of the errors specified for the rutines unlink(2), open(2), semget(3) and shmget(3).
 .SH SEE ALSO
 bus-create(1), bus(5), libbus(7), bus_create(3), bus_close(3)
 .SH AUTHORS

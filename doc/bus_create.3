@@ -15,6 +15,13 @@ If and only if \fIflags\fP contains \fIBUS_INTR\fP, the function shall fail if i
 Unless \fIout_file\fP is \fINULL\P, the pathname of the bus should be stored in a new char array stored in \fI*out_file\fP. The caller must free the allocated stored in \fI*out_file\fP.
 .SH RETURN VALUES
 Upon successful completion, the function shall return 0. Otherwise the function shall return -1 and set \fIerrno\fP to indicate the error.
+.SH ERRORS
+.TP
+.IR ENOMEM
+The process cannot allocate more memory.
+.SH
+
+The \fIbus_create\fP() function may also fail and set \fIerrno\fP to any of the errors specified for the rutines open(2) and write(2).
 .SH SEE ALSO
 bus-create(1), bus(5), libbus(7), bus_unlink(3), bus_open(3)
 .SH AUTHORS

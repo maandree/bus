@@ -9,6 +9,8 @@ int bus_write(const bus_t *bus, const char *message);
 The \fIbus_write\fP function shall broadcast a message on the bus whose information is stored in \fIbus\fP. The message read by the function is stored in the parameter \fImessage\fIP. It may not exceeed 2048 bytes including NUL-termiantion.
 .SH RETURN VALUES
 Upon successful completion, the function shall return 0. Otherwise the function shall return -1 and set \fIerrno\fP to indicate the error.
+.SH ERRORS
+The \fIbus_read\fP() function may fail and set \fIerrno\fP to any of the errors specified for the rutine semop(3).
 .SH SEE ALSO
 bus-create(1), bus(5), libbus(7), bus_open(3), bus_raed(3)
 .SH AUTHORS

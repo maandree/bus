@@ -20,6 +20,19 @@ The process will only be using the bus for sending messages.
 The process will use the bus for both receiving adn sending messages.
 .SH RETURN VALUES
 Upon successful completion, the function shall return 0. Otherwise the function shall return -1 and set \fIerrno\fP to indicate the error.
+.SH ERRORS
+.TP
+.IR ENOMEM
+The process cannot allocate more memory.
+.TP
+.IR EACCES
+Operation permission is denied to the calling process.
+.TP
+.IR EINVAL
+The described bus does not exist.
+.SH
+
+The \fIbus_open\fP() function may also fail and set \fIerrno\fP to any of the errors specified for the rutine open(2).
 .SH SEE ALSO
 bus-create(1), bus(5), libbus(7), bus_open(3), bus_unlink(3)
 .SH AUTHORS

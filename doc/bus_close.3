@@ -9,6 +9,10 @@ int bus_close(bus_t *bus);
 The \fIbus_close\fP function shall dispose of resource require for the process to use a bus whose information is stored in \fIbus\fP.
 .SH RETURN VALUES
 Upon successful completion, the function shall return 0. Otherwise the function shall return -1 and set \fIerrno\fP to indicate the error.
+.SH ERRORS
+.TP
+.IR EINVAL
+The bus does not exist.
 .SH SEE ALSO
 bus-create(1), bus(5), libbus(7), bus_open(3), bus_unlink(3)
 .SH AUTHORS

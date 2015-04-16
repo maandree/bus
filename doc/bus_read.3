@@ -11,6 +11,8 @@ The \fIbus_read\fP function shall continuously wait for new message to be sent o
 After \fIcallback\fP returns, \fImessage\fP may be override. Therefore \fIcallback\fP should copy \fImessage\fP and start a new thread that uses the copy of \fImessage\fP. \fIcallback\fP shall return -1 on failure, 0 if \fIbus_read\fP should stop listening or 1 if \fIbus_read\fP should stop listening.
 .SH RETURN VALUES
 Upon successful completion, the function shall return 0. Otherwise the function shall return -1 and set \fIerrno\fP to indicate the error.
+.SH ERRORS
+The \fIbus_read\fP() function may fail and set \fIerrno\fP to any of the errors specified for the rutine semop(3).
 .SH SEE ALSO
 bus-create(1), bus(5), libbus(7), bus_open(3), bus_write(3)
 .SH AUTHORS
