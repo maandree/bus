@@ -10,7 +10,7 @@ LIB_VERSION = ${LIB_MAJOR}.${LIB_MINOR}
 
 all: bus
 
-bus: bin/bus bin/libbus.so.$(LIB_MAJOR)
+bus: bin/bus bin/libbus.so.$(LIB_VERSION) bin/libbus.so.$(LIB_MAJOR) bin/libbus.so
 
 bin/bus: obj/cmdline-nofpic.o obj/bus-nofpic.o
 	@echo CC -o $@
@@ -21,6 +21,16 @@ bin/libbus.so.${LIB_VERSION}: obj/bus-fpic.o
 	@echo CC -o $@
 	@mkdir -p bin
 	@${CC} ${FLAGS} -shared -Wl,-soname,libbus.so.${LIB_MAJOR} -o $@ $^ ${LDFLAGS}
+
+bin/libbus.so.${LIB_MAJOR}:
+	@echo LN -s $@
+	@mkdir -p bin
+	@ln -sf libbus.so.${LIB_VERSION} $@
+
+bin/libbus.so:
+	@echo LN -s $@
+	@mkdir -p bin
+	@ln -sf libbus.so.${LIB_VERSION} $@
 
 obj/%-nofpic.o: src/%.c src/*.h
 	@echo CC -c $@
