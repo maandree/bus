@@ -5,15 +5,15 @@ all: bus
 
 bus: bin/bus
 
-bin/bus: obj/cmdline.o
+bin/bus: obj/cmdline.o obj/bus.o
 	@echo CC -o $@
 	@mkdir -p bin
 	@${CC} -o $@ $^ ${LDFLAGS}
 
-obj/%.o: src/%.c
+obj/%.o: src/%.c src/*.h
 	@echo CC -c $<
 	@mkdir -p obj
-	@${CC} -c -o $@ ${CPPFLAGS} ${CFLAGS} $<
+	@${CC} -Wall -Wextra -pedantic -c -o $@ ${CPPFLAGS} ${CFLAGS} $<
 
 clean:
 	@echo cleaning

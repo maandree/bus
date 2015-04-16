@@ -180,8 +180,8 @@ create_semaphores(bus_t *bus)
 
 fail:
 	saved_errno = errno;
-	if ((id != -1) && (semctl(id, 0, IPC_RMID) == -1))
-		perror(argv0);
+	if (id != -1)
+		semctl(id, 0, IPC_RMID);
 	free(values.array);
 	errno = saved_errno;
 	return -1;
@@ -221,8 +221,8 @@ create_shared_memory(bus_t *bus)
 
 fail:
 	saved_errno = errno;
-	if ((id != -1) && (shmctl(id, IPC_RMID, &_info) == -1))
-		perror(argv0);
+	if (id != -1)
+		shmctl(id, IPC_RMID, &_info);
 	errno = saved_errno;
 	return -1;
 }
@@ -253,7 +253,7 @@ remove_shared_memory(const bus_t *bus)
 {
 	struct shmid_ds _info;
 	int id = shmget(bus->key_shm, BUS_MEMORY_SIZE, 0600);
-	return ((id == -1) || (shmctl(sem_id, IPC_RMID, &_info) == -1)) ? -1 : 0;
+	return ((id == -1) || (shmctl(id, IPC_RMID, &_info) == -1)) ? -1 : 0;
 }
 
 
@@ -302,7 +302,7 @@ write_semaphore(const bus_t *bus, unsigned short semaphore, int value)
  * @return         0 on success, -1 on error
  */
 static int
-open_shared_memory(const bus_t *bus, int flags)
+open_shared_memory(bus_t *bus, int flags)
 {
 	int id;
 	void *address;
@@ -310,7 +310,7 @@ open_shared_memory(const bus_t *bus, int flags)
 	address = shmat(id, NULL, (flags & BUS_RDONLY) ? SHM_RDONLY : 0);
 	if ((address == (void *)-1) || !address)
 		goto fail;
-	this->message = (char *)address;
+	bus->message = (char *)address;
 	return 0;
 fail:
 	return -1;
@@ -324,10 +324,10 @@ fail:
  * @return       0 on success, -1 on error
  */
 static int
-close_shared_memory(const bus_t *bus)
+close_shared_memory(bus_t *bus)
 {
-	t(shmdt(this->message));
-	this->message = NULL;
+	t(shmdt(bus->message));
+	bus->message = NULL;
 	return 0;
 fail:
 	return -1;
@@ -356,9 +356,11 @@ bus_create(const char *file, int flags)
 
 	srand((unsigned int)time(NULL) + (unsigned int)rand());
 
+	/* TODO */ (void) file; (void) flags;
+
 	t(create_semaphores(&bus));
 	t(create_shared_memory(&bus));
-	return NULL; /* TODO */
+	return NULL;
 
 fail:
 	saved_errno = errno;
@@ -417,12 +419,27 @@ fail:
 int
 bus_open(bus_t *bus, const char *file, int flags)
 {
+	int saved_errno;
+	char *line = NULL;
+	size_t len = 0;
+	FILE *f;
+
 	bus->sem_id = -1;
 	bus->key_sem = -1;
 	bus->key_shm = -1;
 	bus->message = NULL;
 
-	/* TODO */
+	f = fopen(file, "r");
+
+	t(getline(&line, &len, f));
+	t(bus->key_sem = (key_t)atoll(line));
+	free(line), line = NULL, len = 0;
+
+	t(getline(&line, &len, f));
+	t(bus->key_shm = (key_t)atoll(line));
+	free(line), line = NULL;
+
+	fclose(f);
 
 	if (flags >= 0) {
 		t(open_semaphores(bus));
@@ -430,6 +447,9 @@ bus_open(bus_t *bus, const char *file, int flags)
 	}
 	return 0;
 fail:
+	saved_errno = errno;
+	free(line);
+	errno = saved_errno;
 	return -1;
 }
 
@@ -444,9 +464,9 @@ int
 bus_close(bus_t *bus)
 {
 	bus->sem_id = -1;
-	if (bus->address)
+	if (bus->message)
 		t(close_shared_memory(bus));
-	bus->address = NULL;
+	bus->message = NULL;
 	return 0;
 fail:
 	return -1;
@@ -466,7 +486,7 @@ bus_write(const bus_t *bus, const char *message)
 {
 	t(acquire_semaphore(bus, X, SEM_UNDO));
 	t(zero_semaphore(bus, W));
-	t(write_shared_memory(bus, message));
+	write_shared_memory(bus, message);
 	t(write_semaphore(bus, Q, 0));
 	t(zero_semaphore(bus, S));
 	t(release_semaphore(bus, X, SEM_UNDO));
