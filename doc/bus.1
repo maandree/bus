@@ -1,0 +1,42 @@
+.TH BUS 1 BUS-%VERSION%
+.SH NAME
+bus - A simple daemonless system for broadcasting messages locally
+.SH SYNOPSIS
+.B bus
+.IR command
+.IR argument...
+.SH COMMANDS
+.TP
+.B create
+Create a bus.
+.TP
+.B remove
+Remove a bus.
+.TP
+.B listen
+Listen for new message on a bus.
+.TP
+.B wait
+Listen for one new message only on a bus.
+.TP
+.B broadcast
+Broadcast a message on a bus.
+.SH EXIT STATUS
+.TP
+0
+The command was successful.
+.TP
+1
+The command failed.
+.TP
+2
+The command is not recognised.
+.SH SEE ALSO
+bus(5), libbus(7)
+.SH AUTHORS
+See the LICENSE file for the authors.
+.SH LICENSE
+See the LICENSE file for the terms of redistribution.
+.SH BUGS
+Please report them.
+
