@@ -1,0 +1,20 @@
+.TH BUS_UNLINK 1 BUS-%VERSION%
+.SH NAME
+bus_unlink - Remove a bus
+.SH SYNOPSIS
+#include <bus.h>
+
+int bus_unlink(const char *file);
+.SH DESCRIPTION
+The \fIbus_unlink\fP function shall remove the bus assoicated with the pathname stored in \fIfile\fP. The \fIbus_unlink\fP function shall also unlink the file.
+.SH RETURN VALUES
+Upon successful completion, the function shall return 0. Otherwise the function shall return -1 and set \fIerrno\fP to indicate the error.
+.SH SEE ALSO
+bus-create(1), bus(5), libbus(7), bus_create(3), bus_close(3)
+.SH AUTHORS
+See the LICENSE file for the authors.
+.SH LICENSE
+See the LICENSE file for the terms of redistribution.
+.SH BUGS
+Please report them.
+

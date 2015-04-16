@@ -1,0 +1,20 @@
+.TH BUS_CLOSE 1 BUS-%VERSION%
+.SH NAME
+bus_close - Close a bus
+.SH SYNOPSIS
+#include <bus.h>
+
+int bus_close(bus_t *bus);
+.SH DESCRIPTION
+The \fIbus_close\fP function shall dispose of resource require for the process to use a bus whose information is stored in \fIbus\fP.
+.SH RETURN VALUES
+Upon successful completion, the function shall return 0. Otherwise the function shall return -1 and set \fIerrno\fP to indicate the error.
+.SH SEE ALSO
+bus-create(1), bus(5), libbus(7), bus_open(3), bus_unlink(3)
+.SH AUTHORS
+See the LICENSE file for the authors.
+.SH LICENSE
+See the LICENSE file for the terms of redistribution.
+.SH BUGS
+Please report them.
+

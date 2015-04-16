@@ -1,0 +1,20 @@
+.TH BUS_CLOSE 1 BUS-%VERSION%
+.SH NAME
+bus_write - Broadcast a message a bus
+.SH SYNOPSIS
+#include <bus.h>
+
+int bus_write(const bus_t *bus, const char *message);
+.SH DESCRIPTION
+The \fIbus_write\fP function shall broadcast a message on the bus whose information is stored in \fIbus\fP. The message read by the function is stored in the parameter \fImessage\fIP. It may not exceeed 2048 bytes including NUL-termiantion.
+.SH RETURN VALUES
+Upon successful completion, the function shall return 0. Otherwise the function shall return -1 and set \fIerrno\fP to indicate the error.
+.SH SEE ALSO
+bus-create(1), bus(5), libbus(7), bus_open(3), bus_raed(3)
+.SH AUTHORS
+See the LICENSE file for the authors.
+.SH LICENSE
+See the LICENSE file for the terms of redistribution.
+.SH BUGS
+Please report them.
+

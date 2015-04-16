@@ -1,0 +1,22 @@
+.TH BUS_CLOSE 1 BUS-%VERSION%
+.SH NAME
+bus_read - Listen for new messages a bus
+.SH SYNOPSIS
+#include <bus.h>
+
+int bus_read(const bus_t *bus, int (*callback)(const char *message, void *user_data), void *user_data);
+.SH DESCRIPTION
+The \fIbus_read\fP function shall continuously wait for new message to be sent on the bus whose information is stored in \fIbus\fP. Once a message is received, the \fIcallback\fP function shall be invoked. \fImessage\fP should be the recieved message, and \fIuser_data\fP for \fIcallback\fP should be \fIuser_data\fP from \fIbus_read\fP.
+
+After \fIcallback\fP returns, \fImessage\fP may be override. Therefore \fIcallback\fP should copy \fImessage\fP and start a new thread that uses the copy of \fImessage\fP. \fIcallback\fP shall return -1 on failure, 0 if \fIbus_read\fP should stop listening or 1 if \fIbus_read\fP should stop listening.
+.SH RETURN VALUES
+Upon successful completion, the function shall return 0. Otherwise the function shall return -1 and set \fIerrno\fP to indicate the error.
+.SH SEE ALSO
+bus-create(1), bus(5), libbus(7), bus_open(3), bus_write(3)
+.SH AUTHORS
+See the LICENSE file for the authors.
+.SH LICENSE
+See the LICENSE file for the terms of redistribution.
+.SH BUGS
+Please report them.
+

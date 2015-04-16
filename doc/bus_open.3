@@ -1,0 +1,31 @@
+.TH BUS_OPEN 1 BUS-%VERSION%
+.SH NAME
+bus_open - Open a bus
+.SH SYNOPSIS
+#include <bus.h>
+
+int bus_open(bus_t *bus, const char *file, int flags);
+.SH DESCRIPTION
+The \fIbus_open\fP function shall acquire the resources required for the process to use the bus associated with the filename stored in \fIfile\fP. The function shall also store these resource \fIbus\fP for use by other \fBbus\fP functions.
+
+Values for \fIflags\fP are constructed by a bitwise-inclusive OR of flags from the following list.
+.TP
+.IR BUS_RDONLY
+The process will only be using the bus for receiving messages.
+.TP
+.IR BUS_WRONLY
+The process will only be using the bus for sending messages.
+.TP
+.IR BUS_RDWR
+The process will use the bus for both receiving adn sending messages.
+.SH RETURN VALUES
+Upon successful completion, the function shall return 0. Otherwise the function shall return -1 and set \fIerrno\fP to indicate the error.
+.SH SEE ALSO
+bus-create(1), bus(5), libbus(7), bus_open(3), bus_unlink(3)
+.SH AUTHORS
+See the LICENSE file for the authors.
+.SH LICENSE
+See the LICENSE file for the terms of redistribution.
+.SH BUGS
+Please report them.
+

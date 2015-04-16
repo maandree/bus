@@ -11,10 +11,11 @@ VERSION = 1.0
 
 all: bus doc
 doc: man
-man: man1 man5 man7
+man: man1 man3 man5 man7
 
 bus: bin/bus bin/libbus.so.$(LIB_VERSION) bin/libbus.so.$(LIB_MAJOR) bin/libbus.so bin/libbus.a
 man1: bin/bus.1 bin/bus-broadcast.1 bin/bus-create.1 bin/bus-listen.1 bin/bus-remove.1 bin/bus-wait.1
+man3: bin/bus_create.3 bin/bus_unlink.3 bin/bus_open.3 bin/bus_close.3 bin/bus_read.3 bin/bus_write.3
 man5: bin/bus.5
 man7: bin/libbus.7
 
