@@ -1,0 +1,16 @@
+.TH LIBBUS 7 BUS-%VERSION%
+.SH NAME
+libbus - A simple daemonless system for broadcasting messages locally
+.SH DESCRIPTION
+\fBbus\fP is a stupid-simple, thrilless, daemonless interprocess communication system for broadcasting message.
+.SH RATIONALE
+We need an interprocess communication system similar to message queues. But it we need broadcasting rather than anycasting, so we have a fast, simple and daemonless system for announcing events to all processes whom might be interested.
+.SH FUTURE DIRECTION
+Perhaps the ability to have groups and other permissions on bus, so they can be shared among users and be system-wide. Private and abstract buses might be interesting too.
+.SH SEE ALSO
+bus(1), bus(5), bus_create(3), bus_unlink(3), bus_open(3), bus_close(3), bus_read(3), bus_write(3)
+.SH AUTHORS
+See the LICENSE file for the authors.
+.SH BUGS
+Please report them.
+

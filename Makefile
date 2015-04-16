@@ -11,11 +11,12 @@ VERSION = 1.0
 
 all: bus doc
 doc: man
-man: man1 man5
+man: man1 man5 man7
 
 bus: bin/bus bin/libbus.so.$(LIB_VERSION) bin/libbus.so.$(LIB_MAJOR) bin/libbus.so bin/libbus.a
 man1: bin/bus.1 bin/bus-broadcast.1 bin/bus-create.1 bin/bus-listen.1 bin/bus-remove.1 bin/bus-wait.1
 man5: bin/bus.5
+man7: bin/libbus.7
 
 bin/%.1: doc/%.1
 	@echo SED $@
