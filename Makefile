@@ -1,6 +1,27 @@
 # bus - simple message broadcasting IPC system
 # See LICENSE file for copyright and license details.
 
+PREFIX = /usr
+BIN = /bin
+BINDIR = ${PREFIX}${BIN}
+LIB = /lib
+LIBDIR = ${PREFIX}${LIB}
+INCLUDE = /include
+INCLUDEDIR = ${PREFIX}${INCLUDE}
+DATA = /share
+DATADIR = ${PREFIX}${DATA}
+LICENSEDIR = ${DATADIR}/licenses
+MANDIR = ${DATADIR}/man
+
+PKGNAME = bus
+
+
+MAN1 = bus bus-broadcast bus-create bus-listen bus-remove bus-wait
+MAN3 = bus_create bus_unlink bus_open bus_close bus_read bus_write
+MAN5 = bus
+MAN7 = libbus
+
+
 FLAGS = -std=c99 -Wall -Wextra -pedantic -O2
 
 LIB_MAJOR = 1
@@ -13,11 +34,11 @@ all: bus doc
 doc: man
 man: man1 man3 man5 man7
 
-bus: bin/bus bin/libbus.so.$(LIB_VERSION) bin/libbus.so.$(LIB_MAJOR) bin/libbus.so bin/libbus.a
-man1: bin/bus.1 bin/bus-broadcast.1 bin/bus-create.1 bin/bus-listen.1 bin/bus-remove.1 bin/bus-wait.1
-man3: bin/bus_create.3 bin/bus_unlink.3 bin/bus_open.3 bin/bus_close.3 bin/bus_read.3 bin/bus_write.3
-man5: bin/bus.5
-man7: bin/libbus.7
+bus: bin/bus bin/libbus.so.${LIB_VERSION} bin/libbus.so.${LIB_MAJOR} bin/libbus.so bin/libbus.a
+man1: $(foreach M,${MAN1},bin/${M}.1)
+man3: $(foreach M,${MAN3},bin/${M}.3)
+man5: $(foreach M,${MAN5},bin/${M}.5)
+man7: $(foreach M,${MAN7},bin/${M}.7)
 
 bin/%.1: doc/%.1
 	@echo SED $@
@@ -73,6 +94,20 @@ obj/%-fpic.o: src/%.c src/*.h
 	@echo CC -c $@
 	@mkdir -p obj
 	@${CC} ${FLAGS} -fPIC -c -o $@ ${CPPFLAGS} ${CFLAGS} $<
+
+uninstall:
+	-rm -- "${DESTDIR}${BINDIR}/bus"
+	-rm -- "${DESTDIR}${LIBDIR}/libbus.so.${LIB_VERSION}"
+	-rm -- "${DESTDIR}${LIBDIR}/libbus.so.${LIB_MAJOR}"
+	-rm -- "${DESTDIR}${LIBDIR}/libbus.so"
+	-rm -- "${DESTDIR}${LIBDIR}/libbus.a"
+	-rm -- "${DESTDIR}${INCLUDEDIR}/bus.h"
+	-rm -- "${DESTDIR}${LICENSEDIR}/${PKGNAME}/LICENSE"
+	-rmdir -- "${DESTDIR}${LICENSEDIR}/${PKGNAME}"
+	-rm -- $(foreach M,${MAN1},"${DESTDIR}${MANDIR}/man1/${M}.1")
+	-rm -- $(foreach M,${MAN3},"${DESTDIR}${MANDIR}/man3/${M}.3")
+	-rm -- $(foreach M,${MAN5},"${DESTDIR}${MANDIR}/man5/${M}.5")
+	-rm -- $(foreach M,${MAN7},"${DESTDIR}${MANDIR}/man7/${M}.7")
 
 clean:
 	@echo cleaning
