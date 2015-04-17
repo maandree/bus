@@ -95,6 +95,57 @@ obj/%-fpic.o: src/%.c src/*.h
 	@mkdir -p obj
 	@${CC} ${FLAGS} -fPIC -c -o $@ ${CPPFLAGS} ${CFLAGS} $<
 
+install: install-bin install-so install-a install-h install-license install-doc
+install-doc: install-man
+install-man: install-man1 install-man3 install-man5 install-man7
+
+install-bin: bin/bus
+	@echo INSTALL bus
+	@install -dm755 -- "${DESTDIR}${BINDIR}"
+	@install -m755 $^ -- "${DESTDIR}${BINDIR}"
+
+install-so: bin/libbus.so.${LIB_VERSION}
+	@echo INSTALL libbus.so
+	@install -dm755 -- "${DESTDIR}${LIBDIR}"
+	@install -m755 $^ -- "${DESTDIR}${LIBDIR}"
+	@ln -sf -- "libbus.so.${LIB_VERSION}" "${DESTDIR}${LIBDIR}/libbus.so.${LIB_MAJOR}"
+	@ln -sf -- "libbus.so.${LIB_VERSION}" "${DESTDIR}${LIBDIR}/libbus.so"
+
+install-a: bin/libbus.a
+	@echo INSTALL libbus.a
+	@install -dm755 -- "${DESTDIR}${LIBDIR}"
+	@install -m644 $^ -- "${DESTDIR}${LIBDIR}"
+
+install-h:
+	@echo INSTALL bus.h
+	@install -dm755 -- "${DESTDIR}${INCLUDEDIR}"
+	@install -m644 src/bus.h -- "${DESTDIR}${INCLUDEDIR}"
+
+install-license:
+	@echo INSTALL LICENSE
+	@install -dm755 -- "${DESTDIR}${LICENSEDIR}/${PKGNAME}"
+	@install -m644 LICENSE -- "${DESTDIR}${LICENSEDIR}/${PKGNAME}"
+
+install-man1: $(foreach M,${MAN1},bin/${M}.1)
+	@echo INSTALL $(foreach M,${MAN1},${M}.1)
+	@install -dm755 -- "${DESTDIR}${MANDIR}/man1"
+	@install -m644 $^ -- "${DESTDIR}${MANDIR}/man1"
+
+install-man3: $(foreach M,${MAN3},bin/${M}.3)
+	@echo INSTALL $(foreach M,${MAN1},${M}.3)
+	@install -dm755 -- "${DESTDIR}${MANDIR}/man3"
+	@install -m644 $^ -- "${DESTDIR}${MANDIR}/man3"
+
+install-man5: $(foreach M,${MAN5},bin/${M}.5)
+	@echo INSTALL $(foreach M,${MAN1},${M}.5)
+	@install -dm755 -- "${DESTDIR}${MANDIR}/man5"
+	@install -m644 $^ -- "${DESTDIR}${MANDIR}/man5"
+
+install-man7: $(foreach M,${MAN7},bin/${M}.7)
+	@echo INSTALL $(foreach M,${MAN1},${M}.7)
+	@install -dm755 -- "${DESTDIR}${MANDIR}/man7"
+	@install -m644 $^ -- "${DESTDIR}${MANDIR}/man7"
+
 uninstall:
 	-rm -- "${DESTDIR}${BINDIR}/bus"
 	-rm -- "${DESTDIR}${LIBDIR}/libbus.so.${LIB_VERSION}"
@@ -113,5 +164,5 @@ clean:
 	@echo cleaning
 	@-rm -rf obj bin
 
-.PHONY: all doc bus man man1 clean install uninstall
+.PHONY: all doc bus man man1 clean install install-bin install-so install-a install-h include-license install-doc install-man install-man1 install-man3 install-man5 install-man7 uninstall
 
