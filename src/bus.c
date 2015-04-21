@@ -353,6 +353,38 @@ randomchar(void)
 }
 
 
+/**
+ * Basically, this is `mkdir -p -m $mode $pathname`
+ * 
+ * @param   pathname  The pathname of the directory to create if missing
+ * @param   mode      The permission bits of any created directory
+ * @return            0 on sucess, -1 on error
+ */
+static int
+mkdirs(char *pathname, mode_t mode)
+{
+	size_t i, n = strlen(pathname);
+	char c;
+	for (i = 0; i < n; i++)
+		if (pathname[i] != '/')
+			break;
+	for (; i < n; i++) {
+		if (pathname[i] == '/') {
+			c = pathname[i];
+			if (access(pathname, F_OK))
+				if (mkdir(pathname, mode) < 0)
+					return -1;
+			pathname[i] = c;
+			break;
+		}
+	}
+	if (access(pathname, F_OK))
+		if (mkdir(pathname, mode) < 0)
+			return -1;
+	return 0;
+}
+
+
 
 /**
  * Create a new bus
@@ -387,7 +419,7 @@ bus_create(const char *file, int flags, char **out_file)
 	srand((unsigned int)time(NULL) + (unsigned int)rand());
 
 	if (file) {
-		fd = open(file, O_CREAT | O_EXCL);
+		fd = open(file, O_WRONLY | O_CREAT | O_EXCL, 0600);
 		if (fd == -1) {
 			if ((errno != EEXIST) || (flags & BUS_EXCL))
 				return -1;
@@ -402,13 +434,15 @@ bus_create(const char *file, int flags, char **out_file)
 			goto fail;
 		if (out_file)
 			*out_file = genfile;
-		sprintf(genfile, "%s/run/random.", env);
+		sprintf(genfile, "%s/bus", env);
+		t(mkdirs(genfile, 0755));
+		sprintf(genfile, "%s/bus/random.", env);
 		len = strlen(genfile);
 		genfile[len + 30] = '\0';
 	retry:
 		for (ptr = 0; ptr < 30; ptr++)
 			genfile[len + ptr] = randomchar();
-		fd = open(genfile, O_CREAT | O_EXCL);
+		fd = open(genfile, O_WRONLY | O_CREAT | O_EXCL, 0600);
 		if (fd == -1) {
 			if (errno == EEXIST)
 				goto retry;
@@ -423,7 +457,7 @@ bus_create(const char *file, int flags, char **out_file)
 	for (len = strlen(buf), ptr = 0; ptr < len;) {
 		wrote = write(fd, buf + ptr, len - ptr);
 		if (wrote < 0) {
-			if ((errno == EINTR) && (flags & BUS_INTR))
+			if ((errno != EINTR) || (flags & BUS_INTR))
 				goto fail;
 		} else {
 			ptr += (size_t)wrote;
