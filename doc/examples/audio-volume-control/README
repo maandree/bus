@@ -19,15 +19,15 @@ is included in $PATH before /usr/bin.
 
 
 
-Before starting run ~/.init, this code is
+Before starting run ./init, this code is
 should be run from your profile file if you
 want to implement this on your system.
 
-After running ~/.init, you can start one
-or more listeners by running ~/.alsa-monitor.
+After running ./init, you can start one
+or more listeners by running ./alsa-monitor.
 
 To change the volume run
 `./amixer -c 0 -- set Master 5%+` or similar.
 
-When you are done run ~/.cleanup
+When you are done run ./cleanup
 
