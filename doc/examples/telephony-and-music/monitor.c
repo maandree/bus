@@ -27,7 +27,7 @@ static int is_moc_playing(void)
  * time, causing chaos. */
 static int callback(const char *message, void *user_data)
 {
- 	char *msg;
+ 	char *msg = NULL;
 	size_t len = 0;
 	while ((len < 2047) && message[len])
 		len++;
@@ -41,18 +41,18 @@ static int callback(const char *message, void *user_data)
 		ssize_t pid;
 		int requests_pause;
 		if (begin == NULL)
-			return 1;
+			goto done;
 		*begin++ = 0;
 		pid = (ssize_t)atoll(msg);
 		if (pid < 1) /* We need a real PID, too bad there is
 				no convient way to detect if it dies. */
-			return 1;
+			goto done;
 		if ((strstr(begin, "force-pause ") == begin) || !strcmp(begin, "force-pause"))
 			requests_pause = 1;
 		else if ((strstr(begin, "unforce-pause ") == begin) || !strcmp(begin, "unforce-pause"))
 			requests_pause = 0;
 		else
-			return 1;
+			goto done;
 		if ((size_t)pid >= pausers_size) {
 			pausers = realloc(pausers, (size_t)(pid + 1) * sizeof(char));
 			t(pausers == NULL); /* Let's ignore the memory leak. */
@@ -67,12 +67,16 @@ static int callback(const char *message, void *user_data)
 		}
 	}
 	/* END run as in a separate thread */
-	return 1;
+	goto done;
 	(void) user_data;
 
 fail:
 	perror("monitor");
 	return -1;
+
+done:
+	free(msg);
+	return 1;
 }
 
 
