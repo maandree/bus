@@ -4,6 +4,14 @@ bus uses a System V semaphore array and System V shared memory.
 Buses are named; the key of the semaphore array and the
 shared memory is stored in a regular file.
 
+The shared memory used by bus is always 2048 bytes. Additionally
+all messages should be encoded in UTF-8 and not contain any NULL
+characters, except they MUST always end with a zero byte.
+Furthermore messages should be prefixed with the process
+identifer of the process whence the message originated, followed
+by a space. If the process is ephemeral, 0 should be used instead
+of the process identifier.
+
 Communication over bus is synchronous. The broadcast call does
 not return until all listeners have received (and copyied)
 the message.
