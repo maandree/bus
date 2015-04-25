@@ -8,7 +8,7 @@ int bus_read(const bus_t *bus, int (*callback)(const char *message, void *user_d
 .SH DESCRIPTION
 The \fIbus_read\fP function shall continuously wait for new message to be sent on the bus whose information is stored in \fIbus\fP. Once a message is received, the \fIcallback\fP function shall be invoked. \fImessage\fP should be the recieved message, and \fIuser_data\fP for \fIcallback\fP should be \fIuser_data\fP from \fIbus_read\fP.
 
-After \fIcallback\fP returns, \fImessage\fP may be override. Therefore \fIcallback\fP should copy \fImessage\fP and start a new thread that uses the copy of \fImessage\fP. \fIcallback\fP shall return -1 on failure, 0 if \fIbus_read\fP should stop listening or 1 if \fIbus_read\fP should stop listening.
+After \fIcallback\fP returns, \fImessage\fP may be override. Therefore \fIcallback\fP should copy \fImessage\fP and start a new thread that uses the copy of \fImessage\fP. \fIcallback\fP shall return -1 on failure, 0 if \fIbus_read\fP should stop listening or 1 if \fIbus_read\fP should continue listening.
 .SH RETURN VALUES
 Upon successful completion, the function shall return 0. Otherwise the function shall return -1 and set \fIerrno\fP to indicate the error.
 .SH ERRORS
