@@ -1,0 +1,8 @@
+#!/bin/sh
+/usr/bin/amixer "$@"
+for arg in "$@"; do
+    if [ "${arg}" = "set" ] || [ "${arg}" = "sset" ] || [ "${arg}" = "cset" ]; then
+	exec bus broadcast "/tmp/example-bus" '0 volume-changed *'
+    fi
+done
+

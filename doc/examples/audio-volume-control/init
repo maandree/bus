@@ -1,0 +1,12 @@
+#!/bin/sh
+bus create "/tmp/example-bus"
+
+# The following code is more suitable in the real world,
+# if used, the other files should use "${BUS_AUDIO}"
+# instead of "/tmp/example-bus".
+# 
+# export BUS_AUDIO="${XDG_RUNTIME_DIR}/bus/audio"
+# if [ ! -f "${BUS_AUDIO}" ]; then
+#     bus create "${BUS_AUDIO}"
+# fi
+

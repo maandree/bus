@@ -1,0 +1,15 @@
+#!/bin/sh
+if [ $# = 1 ]; then
+    if [ "$(echo "${1}" | cut -d ' ' -f 2)" = "volume-changed" ]; then
+	printf '\e[H\e[2J'
+	amixer get Master
+    fi
+    exit 0
+fi
+
+exec 2>/dev/null
+
+printf '\e[?1049h\e[H\e[2J'
+trap -- "printf '\e[?1049l'" SIGINT
+bus listen "/tmp/example-bus" \'"${0/\'/\'\\\'\'}"\'' "${arg}"'
+

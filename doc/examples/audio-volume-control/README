@@ -1,0 +1,33 @@
+Use-case example.
+
+Assume you have program that display the audio volume.
+This program checks every second third if the volume
+have changed.
+
+Also assume that you use amixer to change the volume,
+most often by using keybindings via xbindkeys.
+
+To reduce the delay, you want to send a signal to the
+monitor program that the volume have changed. For this
+more primitive IPC is sufficient, but lets assume there
+are other programs interested in this information too.
+
+To accomplish this, you create a wrapper for amixer
+than broadcasts updates on a bus. This wrapper is
+installed as ~/.local/bin/amixer, and ~/.local/bin/
+is included in $PATH before /usr/bin.
+
+
+
+Before starting run ~/.init, this code is
+should be run from your profile file if you
+want to implement this on your system.
+
+After running ~/.init, you can start one
+or more listeners by running ~/.alsa-monitor.
+
+To change the volume run
+`./amixer -c 0 -- set Master 5%+` or similar.
+
+When you are done run ~/.cleanup
+
