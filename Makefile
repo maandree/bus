@@ -132,17 +132,17 @@ install-man1: $(foreach M,${MAN1},bin/${M}.1)
 	@install -m644 $^ -- "${DESTDIR}${MANDIR}/man1"
 
 install-man3: $(foreach M,${MAN3},bin/${M}.3)
-	@echo INSTALL $(foreach M,${MAN1},${M}.3)
+	@echo INSTALL $(foreach M,${MAN3},${M}.3)
 	@install -dm755 -- "${DESTDIR}${MANDIR}/man3"
 	@install -m644 $^ -- "${DESTDIR}${MANDIR}/man3"
 
 install-man5: $(foreach M,${MAN5},bin/${M}.5)
-	@echo INSTALL $(foreach M,${MAN1},${M}.5)
+	@echo INSTALL $(foreach M,${MAN5},${M}.5)
 	@install -dm755 -- "${DESTDIR}${MANDIR}/man5"
 	@install -m644 $^ -- "${DESTDIR}${MANDIR}/man5"
 
 install-man7: $(foreach M,${MAN7},bin/${M}.7)
-	@echo INSTALL $(foreach M,${MAN1},${M}.7)
+	@echo INSTALL $(foreach M,${MAN7},${M}.7)
 	@install -dm755 -- "${DESTDIR}${MANDIR}/man7"
 	@install -m644 $^ -- "${DESTDIR}${MANDIR}/man7"
 
