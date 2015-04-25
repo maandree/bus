@@ -85,7 +85,7 @@ spawn_break(const char *message, void *user_data)
 	pid_t pid;
 	if (!message)
 		return 1;
-	if (pid = fork())
+	if ((pid = fork()))
 		return pid == -1 ? -1 : 0;
 	setenv("arg", message, 1);
 	execlp("sh", "sh", "-c", command, NULL);
