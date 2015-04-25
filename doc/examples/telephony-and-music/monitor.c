@@ -29,6 +29,8 @@ static int callback(const char *message, void *user_data)
 {
  	char *msg = NULL;
 	size_t len = 0;
+	if (message == 0)
+		return 1;
 	while ((len < 2047) && message[len])
 		len++;
 	msg = malloc((len + 1) * sizeof(char));
