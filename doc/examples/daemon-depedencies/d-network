@@ -1,0 +1,9 @@
+#!/bin/sh
+PATH=.:$PATH
+d=d-network
+
+echo $d: starting
+sleep 2
+echo $d: ready
+announce ready $d
+

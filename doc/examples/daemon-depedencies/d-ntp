@@ -1,0 +1,11 @@
+#!/bin/sh
+PATH=.:$PATH
+d=d-ntp
+
+require d-network
+echo $d: started
+announce started $d
+await-ready d-network
+echo $d: ready
+announce ready $d
+

@@ -1,0 +1,13 @@
+#!/bin/sh
+PATH=.:$PATH
+d=d-ssh
+
+require d-network
+echo $d: starting
+sleep 1
+echo $d: started
+announce started $d
+sleep 1
+echo $d: ready
+announce ready $d
+
