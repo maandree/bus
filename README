@@ -1,2 +1,13 @@
 A simple daemonless system for broadcasting messages locally.
 
+bus uses a System V semaphore array and System V shared memory.
+Buses are named; the key of the semaphore array and the
+shared memory is stored in a regular file.
+
+Communication over bus is synchronous. The broadcast call does
+not return until all listeners have received (and copyied)
+the message.
+
+The software package contains a C library and a command line
+utility. The package python-bus provides a Python 3 module.
+
