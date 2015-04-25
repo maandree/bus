@@ -162,6 +162,12 @@ int bus_write(const bus_t *bus, const char *message);
  *                      *  0:  stop listening
  *                      *  1:  continue listening
  *                      * -1:  an error has occurred
+ *		      However, the function [`bus_read`] will invoke
+ *                    `callback` with `message` one time directly after
+ *                    it has started listening on the bus. This is to
+ *                    the the program now it can safely continue with
+ *                    any action that requires that the programs is
+ *                    listening on the port.
  * @return            0 on success, -1 on error
  */
 int bus_read(const bus_t *bus, int (*callback)(const char *message, void *user_data), void *user_data);

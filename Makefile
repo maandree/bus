@@ -24,10 +24,10 @@ MAN7 = libbus
 
 FLAGS = -std=c99 -Wall -Wextra -pedantic -O2
 
-LIB_MAJOR = 1
+LIB_MAJOR = 2
 LIB_MINOR = 0
 LIB_VERSION = ${LIB_MAJOR}.${LIB_MINOR}
-VERSION = 1.0.1
+VERSION = 2.0
 
 
 all: bus doc

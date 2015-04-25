@@ -59,8 +59,10 @@ static const char *command;
 static int
 spawn_continue(const char *message, void *user_data)
 {
-	pid_t pid = fork();
-	if (pid)
+	pid_t pid;
+	if (!message)
+		return 1;
+	if ((pid = fork()))
 		return pid == -1 ? -1 : 1;
 	setenv("arg", message, 1);
 	execlp("sh", "sh", "-c", command, NULL);
@@ -75,13 +77,15 @@ spawn_continue(const char *message, void *user_data)
  * 
  * @param   message    The received message
  * @param   user_data  Not used
- * @return             0 (stop listening) on success, -1 on error
+ * @return             0 (stop listening) on success, -1 on error, or 1 if `message` is `NULL`
  */
 static int
 spawn_break(const char *message, void *user_data)
 {
-	pid_t pid = fork();
-	if (pid)
+	pid_t pid;
+	if (!message)
+		return 1;
+	if (pid = fork())
 		return pid == -1 ? -1 : 0;
 	setenv("arg", message, 1);
 	execlp("sh", "sh", "-c", command, NULL);

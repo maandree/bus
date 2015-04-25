@@ -6,7 +6,7 @@ bus_read - Listen for new messages a bus
 
 int bus_read(const bus_t *bus, int (*callback)(const char *message, void *user_data), void *user_data);
 .SH DESCRIPTION
-The \fIbus_read\fP function shall continuously wait for new message to be sent on the bus whose information is stored in \fIbus\fP. Once a message is received, the \fIcallback\fP function shall be invoked. \fImessage\fP should be the recieved message, and \fIuser_data\fP for \fIcallback\fP should be \fIuser_data\fP from \fIbus_read\fP.
+The \fIbus_read\fP function shall continuously wait for new message to be sent on the bus whose information is stored in \fIbus\fP. Once a message is received, the \fIcallback\fP function shall be invoked. \fImessage\fP should be the received message, and \fIuser_data\fP for \fIcallback\fP should be \fIuser_data\fP from \fIbus_read\fP. However, once \fIbus_read\fP has ensured that it will receive any message sent on the bus, it shall invoke the \fIcallback\fP function with \fImessage\fP set to \fINULL\fP, to notify the process that it can perform any action that requires that it is listening on the bus.
 
 After \fIcallback\fP returns, \fImessage\fP may be override. Therefore \fIcallback\fP should copy \fImessage\fP and start a new thread that uses the copy of \fImessage\fP. \fIcallback\fP shall return -1 on failure, 0 if \fIbus_read\fP should stop listening or 1 if \fIbus_read\fP should continue listening.
 .SH RETURN VALUES
