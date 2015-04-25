@@ -1,0 +1,30 @@
+Use-case example.
+
+Assume you have a music player and a telephony program.
+You might like it if the music player pauses whenever
+you make or receive a call. You may also like it, if
+the music resumed when the call ended.
+
+In this example we will assume you the have moc/mocp
+running. And we will use the shell to simulate a
+telephony program.
+
+
+
+First of, run make to build this example.
+Before starting run ./init.
+And when you are done run ./cleanup.
+
+In one terminal run ./monitor. This program will
+pause mocp when you make or receive a call, it will
+also resume mocp when all calls have ended if it
+did pause mocp.
+
+Then start any positive number of terminals.
+We will pretend that each of them are telephony
+programs. To make or receive a call, run
+./receive-or-make-call, when you want to end
+the pretend call, run ./end-call from the
+terminal (or more accurately, from the same
+process).
+
