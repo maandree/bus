@@ -173,6 +173,12 @@ int bus_write(const bus_t *bus, const char *message);
 int bus_read(const bus_t *bus, int (*callback)(const char *message, void *user_data), void *user_data);
 
 
+int bus_poll_start(const bus_t *bus);
+int bus_poll_stop(const bus_t *bus);
+int bus_poll_continue(const bus_t *bus);
+const char *bus_poll(const bus_t *bus);
+
+
 
 #endif
 

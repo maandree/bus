@@ -665,3 +665,42 @@ fail:
 	return -1;
 }
 
+
+int
+bus_poll_start(const bus_t *bus)
+{
+	return release_semaphore(bus, S, SEM_UNDO);
+}
+
+
+int
+bus_poll_stop(const bus_t *bus)
+{
+	return acquire_semaphore(bus, S, SEM_UNDO);
+}
+
+
+int
+bus_poll_continue(const bus_t *bus)
+{
+	t(release_semaphore(bus, W, SEM_UNDO));
+	t(acquire_semaphore(bus, S, SEM_UNDO));
+	t(zero_semaphore(bus, S));
+	t(release_semaphore(bus, S, SEM_UNDO));
+	t(acquire_semaphore(bus, W, SEM_UNDO));
+	return 0;
+fail:
+	return -1;
+}
+
+
+const char *
+bus_poll(const bus_t *bus)
+{
+	t(release_semaphore(bus, Q, 0));
+	t(zero_semaphore(bus, Q));
+	return bus->message;
+fail:
+	return NULL;
+}
+
