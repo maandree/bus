@@ -683,7 +683,7 @@ bus_poll_stop(const bus_t *bus)
 
 
 const char *
-bus_poll(const bus_t *bus)
+bus_poll(bus_t *bus)
 {
 	if (bus->first_poll) {
 		bus->first_poll = 0;
