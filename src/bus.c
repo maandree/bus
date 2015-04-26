@@ -126,6 +126,14 @@
 	(memcpy((bus)->message, msg, (strlen(msg) + 1) * sizeof(char)))
 
 
+/**
+ * If `flags & (bus_flag)`, this macro evalutes to `sys_flag`,
+ * otherwise this macro evalutes to 0.
+ */
+#define F(bus_flag, sys_flag)  \
+	((flags & (bus_flag)) ? sys_flag : 0)
+
+
 
 /**
  * Statement wrapper that goes to `fail` on failure
@@ -607,13 +615,16 @@ fail:
  * @param   bus      Bus information
  * @param   message  The message to write, may not be longer than
  *                   `BUS_MEMORY_SIZE` including the NUL-termination
+ * @param   flags    `BUS_NOWAIT` if this function shall fail if
+ *                   another process is currently running this
+ *                   procedure
  * @return           0 on success, -1 on error
  */
-int /* TODO nonblocking */
-bus_write(const bus_t *bus, const char *message)
+int
+bus_write(const bus_t *bus, const char *message, int flags /* TODO document in man page */)
 {
 	int state = 0, saved_errno;
-	if (acquire_semaphore(bus, X, SEM_UNDO) == -1)
+	if (acquire_semaphore(bus, X, SEM_UNDO | F(BUS_NOWAIT, IPC_NOWAIT)) == -1)
 		return -1;
 	t(zero_semaphore(bus, W, 0));
 	write_shared_memory(bus, message);
@@ -708,10 +719,11 @@ bus_poll_stop(const bus_t *bus)
 }
 
 
-const char * /* TODO nonblocking */
-bus_poll(bus_t *bus)
+const char *
+bus_poll(bus_t *bus, int flags)
 {
 	int state = 0, saved_errno;
+	(void) flags; /* TODO nonblocking */
 	if (!bus->first_poll) {
 		t(release_semaphore(bus, W, SEM_UNDO));  state++;
 		t(acquire_semaphore(bus, S, SEM_UNDO));  state++;

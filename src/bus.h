@@ -57,6 +57,12 @@
  */
 #define BUS_INTR    4
 
+/**
+ * Function shall fail with errno set to `EAGAIN`
+ * if the it would block and this flag is used
+ */
+#define BUS_NOWAIT  1
+
 
 
 /**
@@ -150,9 +156,12 @@ int bus_close(bus_t *bus);
  * @param   bus      Bus information
  * @param   message  The message to write, may not be longer than
  *                   `BUS_MEMORY_SIZE` including the NUL-termination
+ * @param   flags    `BUS_NOWAIT` if this function shall fail if
+ *                   another process is currently running this
+ *                   procedure
  * @return           0 on success, -1 on error
  */
-int bus_write(const bus_t *bus, const char *message);
+int bus_write(const bus_t *bus, const char *message, int flags);
 
 /**
  * Listen (in a loop, forever) for new message on a bus
@@ -181,7 +190,7 @@ int bus_read(const bus_t *bus, int (*callback)(const char *message, void *user_d
 
 int bus_poll_start(bus_t *bus);
 int bus_poll_stop(const bus_t *bus);
-const char *bus_poll(bus_t *bus);
+const char *bus_poll(bus_t *bus, int falgs);
 
 
 

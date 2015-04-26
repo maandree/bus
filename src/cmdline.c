@@ -148,7 +148,7 @@ main(int argc, char *argv[])
 	/* Broadcast a message on a bus. */
 	} else if ((argc == 4) && !strcmp(argv[1], "broadcast")) {
 		t(bus_open(&bus, argv[2], BUS_WRONLY));
-		t(bus_write(&bus, argv[3]));
+		t(bus_write(&bus, argv[3], 0));
 		t(bus_close(&bus));
 
 	} else
