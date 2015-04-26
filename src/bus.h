@@ -101,7 +101,8 @@ typedef struct bus
 
 	/**
 	 * Non-zero if and only if `bus_poll` has not been
-	 * called since the last `bus_poll_start`
+	 * called since the last `bus_poll_start`, or
+	 * if `bus_poll` failed during reading
 	 */
 	int first_poll;
 } bus_t;
@@ -190,7 +191,7 @@ int bus_read(const bus_t *bus, int (*callback)(const char *message, void *user_d
 
 int bus_poll_start(bus_t *bus);
 int bus_poll_stop(const bus_t *bus);
-const char *bus_poll(bus_t *bus, int falgs);
+const char *bus_poll(bus_t *bus, int flags);
 
 
 
