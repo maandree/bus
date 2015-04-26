@@ -92,6 +92,12 @@ typedef struct bus
 	 * The address of the shared memory
 	 */
 	char *message;
+
+	/**
+	 * Non-zero if and only if `bus_poll` has not been
+	 * called since the last `bus_poll_start`
+	 */
+	int first_poll;
 } bus_t;
 
 
@@ -175,7 +181,6 @@ int bus_read(const bus_t *bus, int (*callback)(const char *message, void *user_d
 
 int bus_poll_start(const bus_t *bus);
 int bus_poll_stop(const bus_t *bus);
-int bus_poll_continue(const bus_t *bus);
 const char *bus_poll(const bus_t *bus);
 
 
