@@ -4,31 +4,50 @@ bus_create - Create a new bus
 .SH SYNOPSIS
 #include <bus.h>
 
-int bus_create(const char *file, int flags, char **out_file);
+int bus_create(const char * \fIfile\fP, int  \fIflags\fP, char ** \fIout_file\fP);
 .SH DESCRIPTION
-The \fIbus_create\fP function shall create a bus with the asscoiated pathname specifed by the value of the parameter \fIfile\fP. If the \fIfile\fP is \fINULL\fP, a random pathname shall be selected. This random pathname must adhere to the convention set forth by bus(5).
-
-If \fIfile\fP is not \fINULL\fP, the \fIbus_create\fP function must fail if the file already exists if \fIflags\fP contains \fIBUS_EXCL\fP. Otherwise if \fIfile\fP is not \fINULL\fP, the \fIbus_create\fP function should do nothing if the file already exists.
-
-If and only if \fIflags\fP contains \fIBUS_INTR\fP, the function shall fail if it is interrupted.
-
-Unless \fIout_file\fP is \fINULL\fP, the pathname of the bus should be stored in a new char array stored in \fI*out_file\fP. The caller must free the allocated stored in \fI*out_file\fP.
+The
+.BR bus_create(3)
+function creates a bus with the asscoiated pathname specifed by the
+value of the parameter \fIfile\fP.  If \fIfile\fP is \fINULL\fP a random
+pathname is selected.  This pathname adheres to the convention set forth
+by
+.BR bus(5).
+.PP
+If \fIfile\fP is not \fINULL\fP the
+.BR bus_create(3)
+function fails if the file already exists if \fIflags\fP contains
+\fIBUS_EXCL\fP.  Otherwise if \fIfile\fP is not \fINULL\fP, the
+.BR bus_create(3)
+function does nothing if the file already exists.
+.PP
+If \fIflags\fP contains \fIBUS_INTR\fP, the function fails if it is
+interrupted.
+.PP
+Unless \fIout_file\fP is \fINULL\fP, the pathname of the bus should be
+stored in a new char array stored in \fI*out_file\fP.  The caller must
+free the allocated stored in \fI*out_file\fP.
 .SH RETURN VALUES
-Upon successful completion, the function shall return 0. Otherwise the function shall return -1 and set \fIerrno\fP to indicate the error.
+Upon successful completion, the function returns 0.  Otherwise the
+function return -1 with \fIerrno\fP set to indicate the error.
 .SH ERRORS
 .TP
 .IR ENOMEM
 The process cannot allocate more memory.
-.SH
-.BR
-The \fIbus_create\fP() function may also fail and set \fIerrno\fP to any of the errors specified for the rutines open(2) and write(2).
-.BR
+.PP
+The
+.BR bus_create(3)
+function may also fail and set \fIerrno\fP to any
+of the errors specified for the routines
+.BR open(2)
+and
+.BR write(2).
 .SH SEE ALSO
-bus-create(1), bus(5), libbus(7), bus_unlink(3), bus_open(3)
+bus-create(1), bus(5), libbus(7), bus_unlink(3), bus_open(3), open(2), write(2)
 .SH AUTHORS
-See the LICENSE file for the authors.
+Principal author, Mattias Andrée.  See the LICENSE file for the full
+list of authors.
 .SH LICENSE
-See the LICENSE file for the terms of redistribution.
+MIT/X Consortium License.
 .SH BUGS
-Please report them.
-
+Please report bugs to https://github.com/maandree/bus/issues

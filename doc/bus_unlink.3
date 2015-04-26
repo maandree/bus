@@ -6,9 +6,13 @@ bus_unlink - Remove a bus
 
 int bus_unlink(const char *file);
 .SH DESCRIPTION
-The \fIbus_unlink\fP function shall remove the bus assoicated with the pathname stored in \fIfile\fP. The \fIbus_unlink\fP function shall also unlink the file.
+The
+.BR bus_unlink(3)
+function removes the bus assoicated with the pathname stored in
+\fIfile\fP.  The function also unlinks the file.
 .SH RETURN VALUES
-Upon successful completion, the function shall return 0. Otherwise the function shall return -1 and set \fIerrno\fP to indicate the error.
+Upon successful completion, the function returns 0.  Otherwise the
+function returns -1 and sets \fIerrno\fP to indicate the error.
 .SH ERRORS
 .TP
 .IR EINVAL
@@ -19,16 +23,23 @@ Operation permission is denied to the calling process.
 .TP
 .IR EPERM
 The user does not have permission to remove the bus.
-.SH
-.BR
-The \fIbus_unlink\fP() function may also fail and set \fIerrno\fP to any of the errors specified for the rutines unlink(2), open(2), semget(3) and shmget(3).
-.BR
+.PP
+The
+.BR bus_unlink(3)
+function may also fail and set \fIerrno\fP to any of the errors
+specified for the routines
+.BR unlink(2),
+.BR open(2),
+.BR semget(3)
+and
+.BR shmget(3).
 .SH SEE ALSO
-bus-create(1), bus(5), libbus(7), bus_create(3), bus_close(3)
+bus-create(1), bus(5), libbus(7), bus_create(3), bus_close(3),
+unlink(2), open(2), semget(3) and shmget(3)
 .SH AUTHORS
-See the LICENSE file for the authors.
+Principal author, Mattias Andrée.  See the LICENSE file for the full
+list of authors.
 .SH LICENSE
-See the LICENSE file for the terms of redistribution.
+MIT/X Consortium License.
 .SH BUGS
-Please report them.
-
+Please report bugs to https://github.com/maandree/bus/issues

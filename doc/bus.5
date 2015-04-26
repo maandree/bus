@@ -2,12 +2,20 @@
 .SH NAME
 bus - A simple daemonless system for broadcasting messages locally
 .SH DESCRIPTION
-\fBbus\fP is a simple interprocess communication system for broadcasting messages to other processes on the same machine. \fBbus\fP does not use any daemon. Instead all communication and synchronisation is managed using System V (XSI) semaphores and System V (XSI) shared memory.
-
-The command \fBbus create\fP can be used to new buses. By convention, buses should be stored in \fIXDG_RUNTIME_DIR/bus\fP, this is what \fBbus create\fP does if no pathname is given. The pathname of the bus should be tracked using \fIBUS_X\fP, where \fIX\fP is replaced with either:
+\fBbus\fP is a simple interprocess communication system for broadcasting
+messages to other processes on the same machine.  \fBbus\fP does not use
+any daemon.  Instead, all communication and synchronisation is managed
+using System V (XSI) semaphores and System V (XSI) shared memory.
+.PP
+The command \fBbus create\fP can be used to create new buses. By
+convention, buses should be stored in \fI$XDG_RUNTIME_DIR/bus\fP, this is
+what \fBbus create\fP does if no pathname is given. The pathname of the
+bus should be tracked using \fIBUS_X\fP, where \fIX\fP is replaced with
+either:
 .TP
 .IR GENERIC
-For the bus used in generic cases. That is all but the cases of the buses listed below.
+For the bus used in generic cases. That is all but the cases of the
+buses listed below.
 .TP
 .IR AUDIO
 For the bus used in with the audio subsystem is involved.
@@ -21,14 +29,18 @@ For the bus used in with the input subsystem is involved.
 .IR FILES
 For the bus used in with the storage subsystem is involved.
 .SH
-
-Messages broadcasted on a bus cannot be longer than 2047 bytes, excluding NUL-termination. Message should be encoded in UTF-8, and most not contain the NUL-character.
-
-Broadcasted message should start with the process ID whence the message originated, followed by a single regular space.
+Messages broadcasted on a bus cannot be longer than 2047 bytes,
+excluding NUL termination. Message should be encoded in UTF-8, and most
+not contain the NUL character.
+.PP
+Broadcasted message should start with the process ID whence the message
+originated, followed by a single regular space.
 .SH SEE ALSO
-bus(1), libbus(7)
+bus(1), libbus(7), semop(2), shmop(2)
 .SH AUTHORS
-See the LICENSE file for the authors.
+Principal author, Mattias Andrée.  See the LICENSE file for the full
+list of authors.
+.SH LICENSE
+MIT/X Consortium License.
 .SH BUGS
-Please report them.
-
+Please report bugs to https://github.com/maandree/bus/issues

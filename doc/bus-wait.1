@@ -1,17 +1,15 @@
 .TH BUS-WAIT 1 BUS-%VERSION%
 .SH NAME
-bus wait - Listen for one new message only on a bus
+bus wait - Listen for a new message on a bus
 .SH SYNOPSIS
 .B bus wait
 .IR pathname
 .IR command
 .SH DESCRIPTION
-Listen for one new message on the bus associated
-with \fIpathname\fP, and stop listening once a
-message has been received. Once a message is
-received \fIcommand\fP will be spawned with
-\fI$arg\fP set to the received message.
-POSIX shell syntax applies to \fIcommand\fP.
+Listen for a new message on the bus associated with \fIpathname\fP, stop
+listening once a message has been received.  Once a message is received,
+\fIcommand\fP will be spawned with \fI$arg\fP set to the received
+message.  POSIX shell syntax applies to \fIcommand\fP.
 .SH EXIT STATUS
 .TP
 0
@@ -25,9 +23,9 @@ The command is not recognised.
 .SH SEE ALSO
 bus(5)
 .SH AUTHORS
-See the LICENSE file for the authors.
+Principal author, Mattias Andrée.  See the LICENSE file for the full
+list of authors.
 .SH LICENSE
-See the LICENSE file for the terms of redistribution.
+MIT/X Consortium License.
 .SH BUGS
-Please report them.
-
+Please report bugs to https://github.com/maandree/bus/issues

@@ -4,23 +4,33 @@ bus - A simple daemonless system for broadcasting messages locally
 .SH SYNOPSIS
 .B bus
 .IR command
-.IR argument...
+.IR argument\ ...
 .SH COMMANDS
 .TP
 .B create
-Create a bus.
+Create a bus, see
+.BR bus-create (1)
+for further details.
 .TP
 .B remove
-Remove a bus.
+Remove a bus, see
+.BR bus-remove (1)
+for further details.
 .TP
 .B listen
-Listen for new message on a bus.
+Listen for new message on a bus, see
+.BR bus-listen (1)
+for further details.
 .TP
 .B wait
-Listen for one new message only on a bus.
+Listen for one new message only on a bus, see
+.BR bus-wait (1)
+for further details.
 .TP
 .B broadcast
-Broadcast a message on a bus.
+Broadcast a message on a bus, see
+.BR bus-broadcast (1)
+for further details.
 .SH EXIT STATUS
 .TP
 0
@@ -32,11 +42,12 @@ The command failed.
 2
 The command is not recognised.
 .SH SEE ALSO
-bus(5), libbus(7)
+bus-create(1), bus-remove(1), bus-listen(1), bus-wait(1),
+bus-broadcast(1), bus(5), libbus(7)
 .SH AUTHORS
-See the LICENSE file for the authors.
+Principal author, Mattias Andrée.  See the LICENSE file for the full
+list of authors.
 .SH LICENSE
-See the LICENSE file for the terms of redistribution.
+MIT/X Consortium License.
 .SH BUGS
-Please report them.
-
+Please report bugs to https://github.com/maandree/bus/issues
