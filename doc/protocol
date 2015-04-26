@@ -1,33 +1,34 @@
-init:
+create:
 	Select a filename.
 
-	Create XSI semaphore array {S = 0, W = 0, X = 1 and Q = 0}
-	with random key. Store the semaphore array's key in
-	decimal form on the first line in the selected file.
+	Create XSI semaphore array {S = 0, W = 0, X = 1, Q = 0 and N = 0}
+	with random key. Store the semaphore array's key in decimal form
+	on the first line in the selected file.
 
-	Create XSI shared memory, with an allocation of 2048 bytes,
-	with a random key. Store the shared memory's key in
-	decimal form on the second line in the selected file.
+	Create XSI shared memory, with an allocation of 2048 bytes, with a
+	random key. Store the shared memory's key in decimal form on the
+	second line in the selected file.
 
 
 broadcast:
 	with P(X):
 	  Z(W)
 	  Write NUL-terminate message to shared memory
-	  Q := 0
-	  Z(S)
+	  with V(N):
+	    Q := 0
+	    Z(S)
 
 
 listen:
-	V(S) with undo on exit
-	forever:
-	  V(Q)
-	  Z(Q)
-	  Read NUL-terminated message from shared memory
-	  if breaking:
-	    P(S) with undo on exit
-	    break
-	  with V(W):
-	    with P(S):
-	       Z(S)
+	with V(S):
+	  forever:
+	    V(Q)
+	    Z(Q)
+	    Read NUL-terminated message from shared memory
+	    if breaking:
+	      break
+	    with V(W):
+	      with P(S):
+	         Z(S)
+	         Z(N)
 
