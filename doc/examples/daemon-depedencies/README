@@ -1,0 +1,19 @@
+Use-case example.
+
+This example shows how bus can be used in a init
+system to provide "aggressivly" parallel startup
+of daemons.
+
+
+First of, run make to build this example.
+
+To start the example run ./init. It will print in
+red export-statement you may want to run i other
+terminals. You will need to select at least one
+daemon, for example you can run `./init d-ntp`.
+The available pretend daemons are: d-network,
+d-ntp and d-ssh.
+
+When you are done run ./cleanup with BUS_INIT
+exported with the value printed by ./init.
+
