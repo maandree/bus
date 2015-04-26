@@ -6,19 +6,39 @@ bus_read - Listen for new messages a bus
 
 int bus_read(const bus_t *bus, int (*callback)(const char *message, void *user_data), void *user_data);
 .SH DESCRIPTION
-The \fIbus_read\fP function shall continuously wait for new message to be sent on the bus whose information is stored in \fIbus\fP. Once a message is received, the \fIcallback\fP function shall be invoked. \fImessage\fP should be the received message, and \fIuser_data\fP for \fIcallback\fP should be \fIuser_data\fP from \fIbus_read\fP. However, once \fIbus_read\fP has ensured that it will receive any message sent on the bus, it shall invoke the \fIcallback\fP function with \fImessage\fP set to \fINULL\fP, to notify the process that it can perform any action that requires that it is listening on the bus.
-
-After \fIcallback\fP returns, \fImessage\fP may be override. Therefore \fIcallback\fP should copy \fImessage\fP and start a new thread that uses the copy of \fImessage\fP. \fIcallback\fP shall return -1 on failure, 0 if \fIbus_read\fP should stop listening or 1 if \fIbus_read\fP should continue listening.
+The
+.BR bus_read(3)
+function waits for new message to be sent on the bus specified in
+\fIbus\fP, as provieded by a previous call to the
+.BR bus_open(3)
+function.  Once a message is received, the \fIcallback\fP function is
+invoked.  The \fImessage\fP argument to the callback is the received
+message, and \fIuser_data\fP for \fIcallback\fP should be
+\fIuser_data\fP from \fIbus_read\fP.  However, once \fIbus_read\fP has
+ensured that it will receive any message sent on the bus, it shall
+invoke the \fIcallback\fP function with \fImessage\fP set to \fINULL\fP,
+to notify the process that it can perform any action that requires that
+it is listening on the bus.
+.PP
+After \fIcallback\fP returns, \fImessage\fP may be override. Therefore
+\fIcallback\fP should copy \fImessage\fP and start a new thread that
+uses the copy of \fImessage\fP. \fIcallback\fP shall return -1 on
+failure, 0 if \fIbus_read\fP should stop listening or 1 if
+\fIbus_read\fP should continue listening.
 .SH RETURN VALUES
-Upon successful completion, the function shall return 0. Otherwise the function shall return -1 and set \fIerrno\fP to indicate the error.
+Upon successful completion, the function returns 0.  Otherwise the
+function returns -1 and sets \fIerrno\fP to indicate the error.
 .SH ERRORS
-The \fIbus_read\fP() function may fail and set \fIerrno\fP to any of the errors specified for the rutine semop(3).
+The
+.BR bus_read(3)
+function may fail and set \fIerrno\fP to any of the errors specified for
+.BR semop(3).
 .SH SEE ALSO
-bus-create(1), bus(5), libbus(7), bus_open(3), bus_write(3)
+bus-create(1), bus(5), libbus(7), bus_open(3), bus_write(3), semop(3)
 .SH AUTHORS
-See the LICENSE file for the authors.
+Principal author, Mattias Andrée.  See the LICENSE file for the full
+list of authors.
 .SH LICENSE
-See the LICENSE file for the terms of redistribution.
+MIT/X Consortium License.
 .SH BUGS
-Please report them.
-
+Please report bugs to https://github.com/maandree/bus/issues

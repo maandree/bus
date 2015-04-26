@@ -6,9 +6,16 @@ bus_open - Open a bus
 
 int bus_open(bus_t *bus, const char *file, int flags);
 .SH DESCRIPTION
-The \fIbus_open\fP function shall acquire the resources required for the process to use the bus associated with the filename stored in \fIfile\fP. The function shall also store these resource \fIbus\fP for use by other \fBbus\fP functions.
-
-Values for \fIflags\fP are constructed by a bitwise-inclusive OR of flags from the following list.
+The
+.BR bus_open(3)
+function acquires resources required for the process to use the bus
+associated with the filename stored in \fIfile\fP.  The function also
+stores the resource \fIbus\fP for use by other
+.BR bus(5)
+functions.
+.PP
+Values for \fIflags\fP are constructed by a bitwise inclusive OR of
+flags from the following list.
 .TP
 .IR BUS_RDONLY
 The process will only be using the bus for receiving messages.
@@ -17,9 +24,10 @@ The process will only be using the bus for receiving messages.
 The process will only be using the bus for sending messages.
 .TP
 .IR BUS_RDWR
-The process will use the bus for both receiving adn sending messages.
+The process will use the bus for both receiving and sending messages.
 .SH RETURN VALUES
-Upon successful completion, the function shall return 0. Otherwise the function shall return -1 and set \fIerrno\fP to indicate the error.
+Upon successful completion the function returns 0.  Otherwise the
+function returns -1 and set \fIerrno\fP to indicate the error.
 .SH ERRORS
 .TP
 .IR ENOMEM
@@ -30,16 +38,18 @@ Operation permission is denied to the calling process.
 .TP
 .IR EINVAL
 The described bus does not exist.
-.SH
-.BR
-The \fIbus_open\fP() function may also fail and set \fIerrno\fP to any of the errors specified for the rutine open(2).
-.BR
+.PP
+The
+.BR bus_open(3)
+function may also fail and set \fIerrno\fP to any of the errors
+specified for the routine
+.BR open(2).
 .SH SEE ALSO
-bus-create(1), bus(5), libbus(7), bus_open(3), bus_unlink(3)
+bus-create(1), bus(5), libbus(7), bus_open(3), bus_unlink(3), open(2)
 .SH AUTHORS
-See the LICENSE file for the authors.
+Principal author, Mattias Andrée.  See the LICENSE file for the full
+list of authors.
 .SH LICENSE
-See the LICENSE file for the terms of redistribution.
+MIT/X Consortium License.
 .SH BUGS
-Please report them.
-
+Please report bugs to https://github.com/maandree/bus/issues
