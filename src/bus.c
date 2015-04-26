@@ -595,6 +595,7 @@ bus_close(bus_t *bus)
 		t(close_shared_memory(bus));
 	bus->message = NULL;
 	return 0;
+
 fail:
 	return -1;
 }
@@ -622,6 +623,7 @@ bus_write(const bus_t *bus, const char *message)
 	t(acquire_semaphore(bus, N, SEM_UNDO));  state--;
 	t(release_semaphore(bus, X, SEM_UNDO));
 	return 0;
+
 fail:
 	saved_errno = errno;
 	if (state > 0)
@@ -674,6 +676,7 @@ bus_read(const bus_t *bus, int (*callback)(const char *message, void *user_data)
 		t(release_semaphore(bus, S, SEM_UNDO));  state--;
 		t(acquire_semaphore(bus, W, SEM_UNDO));  state--;
 	}
+
 fail:
 	saved_errno = errno;
 	if (state > 1)
@@ -722,6 +725,7 @@ bus_poll(bus_t *bus)
 	t(release_semaphore(bus, Q, 0));
 	t(zero_semaphore(bus, Q, 0));
 	return bus->message;
+
 fail:
 	saved_errno = errno;
 	if (state > 1)
