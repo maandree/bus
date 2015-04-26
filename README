@@ -15,7 +15,7 @@ of the process identifier.
 
 Communication over bus is synchronous. The broadcast call does
 not return until all listeners have received (and copyied)
-the message.
+the message. A malfunctioning program can lock to bus.
 
 The software package contains a C library and a command line
 utility. The package python-bus provides a Python 3 module.
