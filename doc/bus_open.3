@@ -17,26 +17,26 @@ functions.
 Values for \fIflags\fP are constructed by a bitwise inclusive OR of
 flags from the following list.
 .TP
-.IR BUS_RDONLY
+.B BUS_RDONLY
 The process will only be using the bus for receiving messages.
 .TP
-.IR BUS_WRONLY
+.B BUS_WRONLY
 The process will only be using the bus for sending messages.
 .TP
-.IR BUS_RDWR
+.B BUS_RDWR
 The process will use the bus for both receiving and sending messages.
 .SH RETURN VALUES
 Upon successful completion the function returns 0.  Otherwise the
 function returns -1 and set \fIerrno\fP to indicate the error.
 .SH ERRORS
 .TP
-.IR ENOMEM
+.B ENOMEM
 The process cannot allocate more memory.
 .TP
-.IR EACCES
+.B EACCES
 Operation permission is denied to the calling process.
 .TP
-.IR EINVAL
+.B EINVAL
 The described bus does not exist.
 .PP
 The

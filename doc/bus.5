@@ -13,7 +13,7 @@ what \fBbus create\fP does if no pathname is given. The pathname of the
 bus should be tracked using \fIBUS_X\fP, where \fIX\fP is replaced with
 either:
 .TP
-.IR GENERIC
+.B GENERIC
 For the bus used in generic cases. That is all but the cases of the
 buses listed below.
 .TP
@@ -28,7 +28,7 @@ For the bus used in with the input subsystem is involved.
 .TP
 .IR FILES
 For the bus used in with the storage subsystem is involved.
-.SH
+.PP
 Messages broadcasted on a bus cannot be longer than 2047 bytes,
 excluding NUL termination. Message should be encoded in UTF-8, and most
 not contain the NUL character.
