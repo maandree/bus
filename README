@@ -1,4 +1,5 @@
 A simple daemonless system for broadcasting messages locally.
+bus is a light-weight alternative to a two-phase flexible barrier.
 
 bus uses a System V semaphore array and System V shared memory.
 Buses are named; the key of the semaphore array and the
