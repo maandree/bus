@@ -48,7 +48,8 @@ static int callback(const char *message, void *user_data)
 		ppid = getppid();
 		pid = fork();
 		if (pid == 0) {
-			announce_wait(ppid);
+			if (fork() == 0)
+				announce_wait(ppid);
 			exit(0);
 		} else {
 			(void) waitpid(pid, NULL, 0); /* Let's pretend everything will go swimmingly. */
@@ -59,7 +60,7 @@ static int callback(const char *message, void *user_data)
 	strncpy(msg, message, BUS_MEMORY_SIZE - 1);
 	msg[BUS_MEMORY_SIZE - 1] = 0;
 
-	arg2 = strchr(message, ' ');
+	arg2 = strchr(msg, ' ');
 	if (!arg2)
 		return 1;
 	arg3 = strchr(++arg2, ' ');
@@ -89,8 +90,8 @@ int main(int argc_, char *argv_[])
 
 	if (argc < 2)
 		return fprintf(stderr, "USAGE: %s daemon...", *argv), 2;
-	t(bus_open(&bus, getenv("BUS_INIT"), BUS_WRONLY));
-	started = calloc(argc - 1, sizeof(char));
+	t(bus_open(&bus, getenv("BUS_INIT"), BUS_RDONLY));
+	started = calloc(argc, sizeof(char));
 	t(started == NULL);
 
 	started[0] = 1;
