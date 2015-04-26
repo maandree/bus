@@ -685,13 +685,14 @@ bus_poll_stop(const bus_t *bus)
 const char *
 bus_poll(bus_t *bus)
 {
-	if (bus->first_poll) {
-		bus->first_poll = 0;
+	if (!bus->first_poll) {
 		t(release_semaphore(bus, W, SEM_UNDO));
 		t(acquire_semaphore(bus, S, SEM_UNDO));
 		t(zero_semaphore(bus, S));
 		t(release_semaphore(bus, S, SEM_UNDO));
 		t(acquire_semaphore(bus, W, SEM_UNDO));
+	} else {
+		bus->first_poll = 0;
 	}
 	t(release_semaphore(bus, Q, 0));
 	t(zero_semaphore(bus, Q));
