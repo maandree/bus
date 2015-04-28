@@ -14,9 +14,13 @@ broadcast:
 	with P(X):
 	  Z(W)
 	  Write NUL-terminate message to shared memory
-	  with V(N):
+	  with V(N): -- (1)
 	    Q := 0
 	    Z(S)
+
+	-- (1) may be omitted if semaphores are known that
+	   P(·), Z(·), V(·) cannot create a race condition
+	   with a processes running Z(·).
 
 
 listen:
@@ -29,6 +33,17 @@ listen:
 	      break
 	    with V(W):
 	      with P(S):
-	         Z(S)
-	         Z(N)
+	        Z(S)
+	        Z(N)
+
+
+`V(a)` means that semaphore a is released.
+`P(a)` means that semaphore a is acquired.
+`Z(a)` means that the process waits for semaphore a to become 0.
+`with P(a)` that `P(a)` is done before the entering the scope,
+and `V(a)` is done when exiting the scope. It also means that
+these actions [P(a) and V(a)] are undone when the process exits,
+or if the call fails.
+`with V(a)` that `V(a)` is like `with P(a)` that `P(a)` and
+`V(a)` are exchanged.
 

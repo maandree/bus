@@ -623,22 +623,31 @@ fail:
 int
 bus_write(const bus_t *bus, const char *message, int flags /* TODO document in man page */)
 {
-	int state = 0, saved_errno;
+	int saved_errno;
+#ifndef BUS_SEMAPHORES_ARE_SYNCHRONOUS
+	int state = 0;
+#endif
 	if (acquire_semaphore(bus, X, SEM_UNDO | F(BUS_NOWAIT, IPC_NOWAIT)) == -1)
 		return -1;
 	t(zero_semaphore(bus, W, 0));
 	write_shared_memory(bus, message);
+#ifndef BUS_SEMAPHORES_ARE_SYNCHRONOUS
 	t(release_semaphore(bus, N, SEM_UNDO));  state++;
+#endif
 	t(write_semaphore(bus, Q, 0));
 	t(zero_semaphore(bus, S, 0));
+#ifndef BUS_SEMAPHORES_ARE_SYNCHRONOUS
 	t(acquire_semaphore(bus, N, SEM_UNDO));  state--;
+#endif
 	t(release_semaphore(bus, X, SEM_UNDO));
 	return 0;
 
 fail:
 	saved_errno = errno;
+#ifndef BUS_SEMAPHORES_ARE_SYNCHRONOUS
 	if (state > 0)
 		acquire_semaphore(bus, N, SEM_UNDO);
+#endif
 	release_semaphore(bus, X, SEM_UNDO);
 	errno = saved_errno;
 	return -1;
