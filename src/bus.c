@@ -40,6 +40,19 @@
 
 
 
+#ifdef BUS_SEMAPHORES_ARE_SYNCHRONOUS_ME_EVEN_HARDER
+# ifndef BUS_SEMAPHORES_ARE_SYNCHRONOUS_ME_HARDER
+#  define BUS_SEMAPHORES_ARE_SYNCHRONOUS_ME_HARDER
+# endif
+#endif
+#ifdef BUS_SEMAPHORES_ARE_SYNCHRONOUS_ME_HARDER
+# ifndef BUS_SEMAPHORES_ARE_SYNCHRONOUS
+#  define BUS_SEMAPHORES_ARE_SYNCHRONOUS
+# endif
+#endif
+
+
+
 /**
  * Semaphore used to signal `bus_write` that `bus_read` is ready
  */
@@ -60,6 +73,7 @@
  */
 #define Q  3
 
+#ifndef BUS_SEMAPHORES_ARE_SYNCHRONOUS_ME_EVEN_HARDER
 /**
  * Semaphore used to notify `bus_read` that it may restore `S`
  */
@@ -69,6 +83,9 @@
  * The number of semaphores in the semaphore array
  */
 #define BUS_SEMAPHORES  5
+#else
+#define BUS_SEMAPHORES  4
+#endif
 
 
 
@@ -621,7 +638,7 @@ fail:
  * @return           0 on success, -1 on error
  */
 int
-bus_write(const bus_t *bus, const char *message, int flags /* TODO document in man page */)
+bus_write(const bus_t *bus, const char *message, int flags)
 {
 	int saved_errno;
 #ifndef BUS_SEMAPHORES_ARE_SYNCHRONOUS
@@ -692,7 +709,9 @@ bus_read(const bus_t *bus, int (*callback)(const char *message, void *user_data)
 		t(release_semaphore(bus, W, SEM_UNDO));  state++;
 		t(acquire_semaphore(bus, S, SEM_UNDO));  state++;
 		t(zero_semaphore(bus, S, 0));
+#ifndef BUS_SEMAPHORES_ARE_SYNCHRONOUS_ME_HARDER
 		t(zero_semaphore(bus, N, 0));
+#endif
 		t(release_semaphore(bus, S, SEM_UNDO));  state--;
 		t(acquire_semaphore(bus, W, SEM_UNDO));  state--;
 	}
@@ -758,5 +777,39 @@ fail:
 		bus->first_poll = 1;
 	errno = saved_errno;
 	return NULL;
+}
+
+
+int
+bus_chown(const char *file, uid_t owner, gid_t group)
+{
+	bus_t bus;
+	t(bus_open(&bus, file, -1));
+	t(chown(file, owner, group));
+	/* TODO chown sem */
+	/* TODO chown shm */
+	return 0;
+fail:
+	return -1;
+}
+
+
+int
+bus_chmod(const char *file, mode_t mode)
+{
+	bus_t bus;
+	mode_t fmode;
+	mode = (mode & S_IRWXU) ? (mode | S_IRWXU) : (mode & ~S_IRWXU);
+	mode = (mode & S_IRWXG) ? (mode | S_IRWXG) : (mode & ~S_IRWXG);
+	mode = (mode & S_IRWXO) ? (mode | S_IRWXO) : (mode & ~S_IRWXO);
+	mode &= (S_IWUSR | S_IWGRP | S_IWOTH | S_IRUSR | S_IRGRP | S_IROTH);
+	fmode = mode & ~(S_IWGRP | S_IWOTH);
+	t(bus_open(&bus, file, -1));
+	t(chmod(file, fmode));
+	/* TODO chmod sem */
+	/* TODO chmod shm */
+	return 0;
+fail:
+	return -1;
 }
 
