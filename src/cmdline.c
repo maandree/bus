@@ -120,6 +120,7 @@ main(int argc, char *argv[])
 	/* Create a new bus with selected name. */
 	if ((argc == 3) && !strcmp(argv[1], "create")) {
 		t(bus_create(argv[2], 0, NULL));
+		/* TODO add -x */
 
 	/* Create a new bus with random name. */
 	} else if ((argc == 2) && !strcmp(argv[1], "create")) {
@@ -150,6 +151,9 @@ main(int argc, char *argv[])
 		t(bus_open(&bus, argv[2], BUS_WRONLY));
 		t(bus_write(&bus, argv[3], 0));
 		t(bus_close(&bus));
+		/* TODO add -n */
+
+	/* TODO add "chmod", "chown" and "chgrp" */
 
 	} else
 		return 2;

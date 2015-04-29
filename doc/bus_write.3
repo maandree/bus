@@ -4,12 +4,16 @@ bus_write - Broadcast a message a bus
 .SH SYNOPSIS
 #include <bus.h>
 
-int bus_write(const bus_t *bus, const char *message);
+int bus_write(const bus_t *bus, const char *message, int flags);
 .SH DESCRIPTION
 The \fIbus_write()\fP function broadcasts a message on the bus whose
 information is stored in \fIbus\fP.  The message read by the function is
 stored in the parameter \fImessage\fP.  It may not exceeed 2048 bytes,
 including NUL termination.
+.PP
+The \fIbus_write()\fP function shall fail, and set \fIerrno\fP to
+\fIEAGAIN\fP, if the call would suspend the process and
+(\fIflags\fP &BUS_NOWAIT).
 .SH RETURN VALUES
 Upon successful completion, the function returns 0.  Otherwise the
 function returns -1 and sets \fIerrno\fP to indicate the error.

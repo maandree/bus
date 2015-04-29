@@ -732,6 +732,17 @@ done:
 }
 
 
+/**
+ * Announce that the thread is listening on the bus.
+ * This is required so the will does not miss any
+ * messages due to race conditions. Additionally,
+ * not calling this function will cause the bus the
+ * misbehave, is `bus_poll` is written to expect
+ * this function to have been called.
+ * 
+ * @param   bus  Bus information
+ * @return       0 on success, -1 on error
+ */
 int
 bus_poll_start(bus_t *bus)
 {
@@ -740,6 +751,14 @@ bus_poll_start(bus_t *bus)
 }
 
 
+/**
+ * Announce that the thread has stopped listening on the bus.
+ * This is required so that the thread does not cause others
+ * to wait indefinitely.
+ * 
+ * @param   bus  Bus information
+ * @return       0 on success, -1 on error
+ */
 int
 bus_poll_stop(const bus_t *bus)
 {
@@ -780,6 +799,16 @@ fail:
 }
 
 
+/**
+ * Change the ownership of a bus
+ * 
+ * `stat(2)` can be used of the bus's associated file to get the bus's ownership
+ * 
+ * @param   file   The pathname of the bus
+ * @param   owner  The user ID of the bus's new owner
+ * @param   group  The group ID of the bus's new group
+ * @return         0 on success, -1 on error
+ */
 int
 bus_chown(const char *file, uid_t owner, gid_t group)
 {
@@ -794,6 +823,17 @@ fail:
 }
 
 
+/**
+ * Change the permissions for a bus
+ * 
+ * `stat(2)` can be used of the bus's associated file to get the bus's permissions
+ * 
+ * @param   file  The pathname of the bus
+ * @param   mode  The permissions of the bus, any permission for a user implies
+ *                full permissions for that user, except only the owner may
+ *                edit the bus's associated file
+ * @return        0 on success, -1 on error
+ */
 int
 bus_chmod(const char *file, mode_t mode)
 {
