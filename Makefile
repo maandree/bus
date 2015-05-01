@@ -17,7 +17,7 @@ PKGNAME = bus
 
 
 MAN1 = bus bus-broadcast bus-create bus-listen bus-remove bus-wait
-MAN3 = bus_create bus_unlink bus_open bus_close bus_read bus_write
+MAN3 = bus_create bus_unlink bus_open bus_close bus_read bus_write bus_poll bus_chmod bus_chown
 MAN5 = bus
 MAN7 = libbus
 
@@ -135,6 +135,8 @@ install-man3: $(foreach M,${MAN3},bin/${M}.3)
 	@echo INSTALL $(foreach M,${MAN3},${M}.3)
 	@install -dm755 -- "${DESTDIR}${MANDIR}/man3"
 	@install -m644 $^ -- "${DESTDIR}${MANDIR}/man3"
+	@ln -sf -- "bus_poll.3" "${DESTDIR}${MANDIR}/man3/bus_poll_start.3"
+	@ln -sf -- "bus_poll.3" "${DESTDIR}${MANDIR}/man3/bus_poll_stop.3"
 
 install-man5: $(foreach M,${MAN5},bin/${M}.5)
 	@echo INSTALL $(foreach M,${MAN5},${M}.5)
@@ -157,6 +159,8 @@ uninstall:
 	-rmdir -- "${DESTDIR}${LICENSEDIR}/${PKGNAME}"
 	-rm -- $(foreach M,${MAN1},"${DESTDIR}${MANDIR}/man1/${M}.1")
 	-rm -- $(foreach M,${MAN3},"${DESTDIR}${MANDIR}/man3/${M}.3")
+	-rm -- "${DESTDIR}${MANDIR}/man3/bus_poll_start.3"
+	-rm -- "${DESTDIR}${MANDIR}/man3/bus_poll_stop.3"
 	-rm -- $(foreach M,${MAN5},"${DESTDIR}${MANDIR}/man5/${M}.5")
 	-rm -- $(foreach M,${MAN7},"${DESTDIR}${MANDIR}/man7/${M}.7")
 

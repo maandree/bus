@@ -1,0 +1,64 @@
+.TH BUS_POLL 3 BUS-%VERSION%
+.SH NAME
+bus_poll - Wait a message to be broadcasted
+.SH SYNOPSIS
+.LP
+.nf
+#include <bus.h>
+.P
+int bus_poll_start(bus_t *bus);
+int bus_poll_stop(const bus_t *bus);
+const char * bus_poll(bus_t *bus, int flags);
+.fi
+.SH DESCRIPTION
+The
+.BR bus_poll(3)
+function waits for a message to broadcasted on the \fIbus\fP, and return
+the message it receives. The function fails if there is not already a
+message waiting on the bus when the function is called and (\fIflags\fP
+&BUS_NOWAIT). Received messages shall be copied and parsed, and acted
+upon, in a separate thread, and
+.BR bus_poll(3)
+or
+.BR bus_poll_stop(3)
+called again as soon as possible.
+.PP
+The
+.BR bus_poll_start(3)
+funcion must be called before
+.BR bus_poll(3)
+is called for the first time. When the process is done listening on the
+bus it must call the
+.BR bus_poll_stop(3)
+function.
+.SH RETURN VALUES
+Upon successful completion, the functions
+.BR bus_poll_start(3)
+and
+.BR bus_poll_stop(3)
+returns 0.  Otherwise the functions returns -1 and sets \fIerrno\fP to
+indicate the error.
+.PP
+Upon successful completion, the function
+.BR bus_poll(3)
+returns the received message.  Otherwise the function returns \fINULL\fP
+and sets \fIerrno\fP to indicate the error.
+.SH ERRORS
+The
+.BR bus_poll(3),
+.BR bus_poll_start(3)
+and
+.BR bus_poll_stop(3)
+functions may fail and set \fIerrno\fP to any of the errors specified for
+.BR semop(3).
+.SH SEE ALSO
+bus-create(1), bus(5), libbus(7), bus_open(3), bus_write(3),
+bus_read(3), semop(3)
+.SH AUTHORS
+Principal author, Mattias Andrée.  See the LICENSE file for the full
+list of authors.
+.SH LICENSE
+MIT/X Consortium License.
+.SH BUGS
+Please report bugs to https://github.com/maandree/bus/issues or to
+maandree@member.fsf.org

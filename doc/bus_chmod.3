@@ -6,12 +6,12 @@ bus_chmod - Change bus mode bits
 
 int bus_chmod(const char *file, mode_t mode);
 .SH DESCRIPTION
-The \fIbus_chmod()\fP function shall give access to the bus associated
-with \fIfile\fP according to the following rules:
+The \fIbus_chmod()\fP function gives access to the bus associated with
+\fIfile\fP according to the following rules:
 .TP
 *
-If (\fImode\fP &S_IRWXU) the owner should be given full access to
-the bus. Otherwise the owner should have no access.
+If (\fImode\fP &S_IRWXU) the owner should be given full access to the
+bus. Otherwise the owner should have no access.
 .TP
 *
 If (\fImode\fP &S_IRWXG) the group should be given read and write
