@@ -87,6 +87,11 @@
 #define BUS_SEMAPHORES  4
 #endif
 
+/**
+ * The default permission mits of the bus
+ */
+#define DEFAULT_MODE  0600
+
 
 
 /**
@@ -130,7 +135,7 @@
  * @return  :int               0 on success, -1 on error
  */
 #define open_semaphores(bus) \
-	(((bus)->sem_id = semget((bus)->key_sem, BUS_SEMAPHORES, 0600)) == -1 ? -1 : 0)
+	(((bus)->sem_id = semget((bus)->key_sem, BUS_SEMAPHORES, 0)) == -1 ? -1 : 0)
 
 /**
  * Write a message to the shared memory
@@ -194,7 +199,7 @@ create_semaphores(bus_t *bus)
 		bus->key_sem = (key_t)r + 1;
 		if (bus->key_sem == IPC_PRIVATE)
 			continue;
-		id = semget(bus->key_sem, BUS_SEMAPHORES, IPC_CREAT | IPC_EXCL | 0600);
+		id = semget(bus->key_sem, BUS_SEMAPHORES, IPC_CREAT | IPC_EXCL | DEFAULT_MODE);
 		if (id != -1)
 			break;
 		if ((errno != EEXIST) && (errno != EINTR))
@@ -245,7 +250,7 @@ create_shared_memory(bus_t *bus)
 		bus->key_shm = (key_t)r + 1;
 		if (bus->key_shm == IPC_PRIVATE)
 			continue;
-		id = shmget(bus->key_shm, (size_t)BUS_MEMORY_SIZE, IPC_CREAT | IPC_EXCL | 0600);
+		id = shmget(bus->key_shm, (size_t)BUS_MEMORY_SIZE, IPC_CREAT | IPC_EXCL | DEFAULT_MODE);
 		if (id != -1)
 			break;
 		if ((errno != EEXIST) && (errno != EINTR))
@@ -272,7 +277,7 @@ fail:
 static int
 remove_semaphores(const bus_t *bus)
 {
-	int id = semget(bus->key_sem, BUS_SEMAPHORES, 0600);
+	int id = semget(bus->key_sem, BUS_SEMAPHORES, 0);
 	return ((id == -1) || (semctl(id, 0, IPC_RMID) == -1)) ? -1 : 0;
 }
 
@@ -287,7 +292,7 @@ static int
 remove_shared_memory(const bus_t *bus)
 {
 	struct shmid_ds _info;
-	int id = shmget(bus->key_shm, (size_t)BUS_MEMORY_SIZE, 0600);
+	int id = shmget(bus->key_shm, (size_t)BUS_MEMORY_SIZE, 0);
 	return ((id == -1) || (shmctl(id, IPC_RMID, &_info) == -1)) ? -1 : 0;
 }
 
@@ -341,7 +346,7 @@ open_shared_memory(bus_t *bus, int flags)
 {
 	int id;
 	void *address;
-	t(id = shmget(bus->key_shm, (size_t)BUS_MEMORY_SIZE, 0600));
+	t(id = shmget(bus->key_shm, (size_t)BUS_MEMORY_SIZE, 0));
 	address = shmat(id, NULL, (flags & BUS_RDONLY) ? SHM_RDONLY : 0);
 	if ((address == (void *)-1) || !address)
 		goto fail;
@@ -452,7 +457,7 @@ bus_create(const char *file, int flags, char **out_file)
 	srand((unsigned int)time(NULL) + (unsigned int)rand());
 
 	if (file) {
-		fd = open(file, O_WRONLY | O_CREAT | O_EXCL, 0600);
+		fd = open(file, O_WRONLY | O_CREAT | O_EXCL, DEFAULT_MODE);
 		if (fd == -1) {
 			if ((errno != EEXIST) || (flags & BUS_EXCL))
 				return -1;
@@ -475,7 +480,7 @@ bus_create(const char *file, int flags, char **out_file)
 	retry:
 		for (ptr = 0; ptr < 30; ptr++)
 			genfile[len + ptr] = randomchar();
-		fd = open(genfile, O_WRONLY | O_CREAT | O_EXCL, 0600);
+		fd = open(genfile, O_WRONLY | O_CREAT | O_EXCL, DEFAULT_MODE);
 		if (fd == -1) {
 			if (errno == EEXIST)
 				goto retry;
@@ -826,10 +831,27 @@ int
 bus_chown(const char *file, uid_t owner, gid_t group)
 {
 	bus_t bus;
+	struct semid_ds sem_stat;
+	struct shmid_ds shm_stat;
+	int shm_id;
+
 	t(bus_open(&bus, file, -1));
 	t(chown(file, owner, group));
-	/* TODO chown sem */
-	/* TODO chown shm */
+
+	/* chown sem */
+	t(open_semaphores(&bus));
+	t(semctl(bus.sem_id, 0, IPC_STAT, &sem_stat));
+	sem_stat.sem_perm.uid = owner;
+	sem_stat.sem_perm.gid = group;
+	t(semctl(bus.sem_id, 0, IPC_SET, &sem_stat));
+
+	/* chown shm */
+	t(shm_id = shmget(bus.key_shm, (size_t)BUS_MEMORY_SIZE, 0));
+	t(shmctl(shm_id, IPC_STAT, &shm_stat));
+	shm_stat.shm_perm.uid = owner;
+	shm_stat.shm_perm.gid = group;
+	t(shmctl(shm_id, IPC_SET, &shm_stat));
+
 	return 0;
 fail:
 	return -1;
@@ -852,15 +874,31 @@ bus_chmod(const char *file, mode_t mode)
 {
 	bus_t bus;
 	mode_t fmode;
+	struct semid_ds sem_stat;
+	struct shmid_ds shm_stat;
+	int shm_id;
+
 	mode = (mode & S_IRWXU) ? (mode | S_IRWXU) : (mode & ~S_IRWXU);
 	mode = (mode & S_IRWXG) ? (mode | S_IRWXG) : (mode & ~S_IRWXG);
 	mode = (mode & S_IRWXO) ? (mode | S_IRWXO) : (mode & ~S_IRWXO);
 	mode &= (S_IWUSR | S_IWGRP | S_IWOTH | S_IRUSR | S_IRGRP | S_IROTH);
 	fmode = mode & ~(S_IWGRP | S_IWOTH);
+
 	t(bus_open(&bus, file, -1));
 	t(chmod(file, fmode));
-	/* TODO chmod sem */
-	/* TODO chmod shm */
+
+	/* chmod sem */
+	t(open_semaphores(&bus));
+	t(semctl(bus.sem_id, 0, IPC_STAT, &sem_stat));
+	sem_stat.sem_perm.mode = mode;
+	t(semctl(bus.sem_id, 0, IPC_SET, &sem_stat));
+
+	/* chmod shm */
+	t(shm_id = shmget(bus.key_shm, (size_t)BUS_MEMORY_SIZE, 0));
+	t(shmctl(shm_id, IPC_STAT, &shm_stat));
+	shm_stat.shm_perm.mode = mode;
+	t(shmctl(shm_id, IPC_SET, &shm_stat));
+
 	return 0;
 fail:
 	return -1;
