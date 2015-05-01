@@ -27,6 +27,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <grp.h>
+#include <pwd.h>
 
 
 
@@ -95,17 +100,199 @@ spawn_break(const char *message, void *user_data)
 }
 
 
+/**
+ * Parse a permission string
+ * 
+ * @param   str     The permission string
+ * @param   andnot  Output paramter for the mask of bits to remove (before applying `*or`)
+ * @param   or      Output paramter for the mask of bits to apply
+ * @return          0 on success, -1 on error
+ */
+static int
+parse_mode(const char *str, mode_t *andnot, mode_t *or)
+{
+#define U  S_IRWXU
+#define G  S_IRWXG
+#define O  S_IRWXO
+	const char *s = str;
+	int numerical = 1;
+	char op = '=';
+	int bits;
+
+	*andnot = 0;
+	*or = 0;
+
+	if (!*s)
+		return errno = 0, -1;
+
+	for (s = str; *s; s++) {
+		if (('0' >= *s) || (*s >= '9')) {
+			numerical = 0;
+			break;
+		}
+	}
+
+	if (numerical) {
+		*andnot = U | G | O;
+		*or = atoi(str);
+		*or &= U | G | O;
+		*or = (*or & U) ? (*or | U) : (*or & ~U);
+		*or = (*or & G) ? (*or | G) : (*or & ~G);
+		*or = (*or & O) ? (*or | O) : (*or & ~O);
+		return 0;
+	}
+
+	for (s = str; *s; s++) {
+		if (strchr("+-=", *s)) {
+			op = *s;
+		} else if (strchr("ugo", *s)) {
+			if (*str == 'u')
+				bits = U;
+			else if (*str == 'g')
+				bits = G;
+			else
+				bits = O;
+			if (op == '+') {
+				*andnot |= bits;
+				*or |= bits;
+			}
+			else if (op == '-') {
+				*andnot |= bits;
+				*or &= ~bits;
+			}
+			else if (op == '=') {
+				*andnot |= U | G | O;
+				*or |= bits;
+			}
+		} else {
+			return errno = 0, -1;
+		}
+	}
+
+	return 0;
+}
+
+
+/**
+ * Parse a user name/identifier string
+ * 
+ * @param   str  The user's name or identifier, parsings stops
+ *               a the first ':' or and the end of the srting
+ * @param   uid  Output parameter for the user's identifier
+ * @return       0 on success, -1 on error
+ */
+static int
+parse_uid(const char *str, uid_t *uid)
+{
+	const char *s = str;
+	int numerical = 1;
+	uid_t rc = 0;
+	struct passwd *pwd;
+
+	if (!*s || (*s == ':'))
+		return errno = 0, -1;
+
+	for (s = str; *s && (*s != ':'); s++) {
+		if (('0' >= *s) || (*s >= '9')) {
+			numerical = 0;
+			break;
+		}
+	}
+
+	if (numerical) {
+		for (s = str; !*s || (*s == ':'); s++)
+			rc = (rc * 10) + (*s & 15);
+		*uid = rc;
+		return 0;
+	}
+
+	pwd = getpwnam(str);
+	if (!pwd)
+		return -1;
+	*uid = pwd->pw_uid;
+	return 0;
+}
+
+
+/**
+ * Parse a group name/identifier string
+ * 
+ * @param   str  The group's name or identifier
+ * @param   gid  Output parameter for the group's identifier
+ * @return       0 on success, -1 on error
+ */
+static int
+parse_gid(const char *str, gid_t *gid)
+{
+	const char *s = str;
+	int numerical = 1;
+	uid_t rc = 0;
+	struct group *grp;
+
+	if (!*s || strchr(s, ':'))
+		return errno = 0, -1;
+
+	for (s = str; *s; s++) {
+		if (('0' >= *s) || (*s >= '9')) {
+			numerical = 0;
+			break;
+		}
+	}
+
+	if (numerical) {
+		for (s = str; !*s || (*s == ':'); s++)
+			rc = (rc * 10) + (*s & 15);
+		*gid = rc;
+		return 0;
+	}
+
+	grp = getgrnam(str);
+	if (!grp)
+		return -1;
+	*gid = grp->gr_gid;
+	return 0;
+}
+
+
+/**
+ * Parse a ownership string
+ * 
+ * @param   str  The ownership string
+ * @param   uid  Output parameter for the owner, `NULL` if `str` only contains the group
+ * @param   gid  Output parameter for the group, `NULL` if `str` only contains the owner
+ * @return       0 on success, -1 on error
+ */
+static int
+parse_owner(const char *str, uid_t *uid, gid_t *gid)
+{
+	int r = 0;
+
+	if (!uid)
+		return parse_gid(str, gid);
+	if (!gid)
+		return parse_uid(str, uid);
+
+	r = parse_gid(strchr(str, ':') + 1, gid);
+	if (r)
+		return r;
+	return parse_uid(str, uid);
+}
+
+
 
 /**
  * Main function of the command line interface for the bus system
  * 
  * @param   argc  The number of elements in `argv`
  * @param   argv  The command. Valid commands:
- *                  <argv0> create [<path>]             # create a bus
- *                  <argv0> remove <path>               # remove a bus
- *                  <argv0> listen <path> <command>     # listen for new messages
- *                  <argv0> wait <path> <command>       # listen for one new message
- *                  <argv0> broadcast <path> <message>  # broadcast a message
+ *                  <argv0> create [<path>]                 # create a bus
+ *                  <argv0> remove <path>                   # remove a bus
+ *                  <argv0> listen <path> <command>         # listen for new messages
+ *                  <argv0> wait <path> <command>           # listen for one new message
+ *                  <argv0> broadcast <path> <message>      # broadcast a message
+ *                  <argv0> chmod <mode> <path>             # change permissions
+ *                  <argv0> chown <owner>[:<group>] <path>  # change ownership
+ *                  <argv0> chgrp <group> <path>            # change group
  *                <command> will be spawned with $arg set to the message
  * @return        0 on sucess, 1 on error, 2 on invalid command
  */
@@ -114,6 +301,10 @@ main(int argc, char *argv[])
 {
 	bus_t bus;
 	char *file;
+	struct stat attr;
+	uid_t uid;
+	gid_t gid;
+	mode_t mode_andnot, mode_or;
 
 	argv0 = *argv;
 
@@ -153,7 +344,30 @@ main(int argc, char *argv[])
 		t(bus_close(&bus));
 		/* TODO add -n */
 
-	/* TODO add "chmod", "chown" and "chgrp" */
+	/* Change permissions. */
+	} else if ((argc == 4) && !strcmp(argv[1], "chmod")) { /* TODO doc */
+		t(parse_mode(argv[2], &mode_andnot, &mode_or));
+		t(stat(argv[3], &attr));
+		attr.st_mode &= ~mode_andnot;
+		attr.st_mode |= mode_or;
+		t(bus_chmod(argv[3], attr.st_mode));
+
+	/* Change ownership. */
+	} else if ((argc == 4) && !strcmp(argv[1], "chown")) { /* TODO doc */
+		if (strchr(argv[2], ':')) {
+			t(parse_owner(argv[2], &uid, &gid));
+			t(bus_chown(argv[3], uid, gid));
+		} else {
+			t(parse_owner(argv[2], &uid, NULL));
+			t(stat(argv[3], &attr));
+			t(bus_chown(argv[3], uid, attr.st_gid));
+		}
+
+	/* Change group. */
+	} else if ((argc == 4) && !strcmp(argv[1], "chgrp")) { /* TODO doc */
+		t(parse_owner(argv[2], NULL, &gid));
+		t(stat(argv[3], &attr));
+		t(bus_chown(argv[3], attr.st_uid, gid));
 
 	} else
 		return 2;
@@ -161,6 +375,8 @@ main(int argc, char *argv[])
 	return 0;
 
 fail:
+	if (errno == 0)
+		return 2;
 	perror(argv0);
 	return 1;
 }
