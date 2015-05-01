@@ -1,0 +1,38 @@
+.TH BUS_CHOWN 3 BUS-%VERSION%
+.SH NAME
+bus_chown - Change bus owner and group
+.SH SYNOPSIS
+#include <bus.h>
+
+int bus_chown(const char *file, uid_t owner, gid_t group);
+.SH DESCRIPTION
+The \fIbus_chown()\fP function shall change the owner and the group of
+the bus associated with \fIfile\fP to the \fIowner\fP and \fIgroup\fP,
+respectively.
+.SH RETURN VALUES
+Upon successful completion, the function returns 0.  Otherwise the
+function returns -1 and sets \fIerrno\fP to indicate the error.
+.SH ERRORS
+The
+.BR bus_chown(3)
+function may fail and set \fIerrno\fP to any of the
+errors specified for
+.BR bus_open(3),
+.BR chown(3),
+.BR semget(3),
+.BR shmget(3)
+and
+.BR shmctl(3)
+as well as any errors specified for the \fIIPC_STAT\fP and
+\fIIPC_SET\fP commands for
+.BR semctl(3).
+.SH SEE ALSO
+bus-create(1), bus(5), libbus(7), bus_open(3), bus_read(3)
+.SH AUTHORS
+Principal author, Mattias Andrée.  See the LICENSE file for the full
+list of authors.
+.SH LICENSE
+MIT/X Consortium License.
+.SH BUGS
+Please report bugs to https://github.com/maandree/bus/issues or to
+maandree@member.fsf.org

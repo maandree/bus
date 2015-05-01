@@ -1,0 +1,50 @@
+.TH BUS_CHMOD 3 BUS-%VERSION%
+.SH NAME
+bus_chmod - Change bus mode bits
+.SH SYNOPSIS
+#include <bus.h>
+
+int bus_chmod(const char *file, mode_t mode);
+.SH DESCRIPTION
+The \fIbus_chmod()\fP function shall give access to the bus associated
+with \fIfile\fP according to the following rules:
+.TP
+*
+If (\fImode\fP &S_IRWXU) the owner should be given full access to
+the bus. Otherwise the owner should have no access.
+.TP
+*
+If (\fImode\fP &S_IRWXG) the group should be given read and write
+access to the bus. Otherwise the group should have no access.
+.TP
+*
+If (\fImode\fP &S_IRWXO) others (except the group) should be given
+read and write access to the bus. Otherwise others should have no
+access.
+.SH RETURN VALUES
+Upon successful completion, the function returns 0.  Otherwise the
+function returns -1 and sets \fIerrno\fP to indicate the error.
+.SH ERRORS
+The
+.BR bus_chown(3)
+function may fail and set \fIerrno\fP to any of the
+errors specified for
+.BR bus_open(3),
+.BR chmod(3),
+.BR semget(3),
+.BR shmget(3)
+and
+.BR shmctl(3)
+as well as any errors specified for the \fIIPC_STAT\fP and
+\fIIPC_SET\fP commands for
+.BR semctl(3).
+.SH SEE ALSO
+bus-create(1), bus(5), libbus(7), bus_open(3), bus_read(3)
+.SH AUTHORS
+Principal author, Mattias Andrée.  See the LICENSE file for the full
+list of authors.
+.SH LICENSE
+MIT/X Consortium License.
+.SH BUGS
+Please report bugs to https://github.com/maandree/bus/issues or to
+maandree@member.fsf.org
