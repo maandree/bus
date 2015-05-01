@@ -163,6 +163,7 @@ int bus_close(bus_t *bus);
  * @return           0 on success, -1 on error
  */
 int bus_write(const bus_t *bus, const char *message, int flags);
+/* TODO bus_write_timed */
 
 /**
  * Listen (in a loop, forever) for new message on a bus
@@ -187,6 +188,7 @@ int bus_write(const bus_t *bus, const char *message, int flags);
  * @return            0 on success, -1 on error
  */
 int bus_read(const bus_t *bus, int (*callback)(const char *message, void *user_data), void *user_data);
+/* TODO bus_read_timed */
 
 
 /**
@@ -226,6 +228,7 @@ int bus_poll_stop(const bus_t *bus);
  * @return         The received message, `NULL` on error
  */
 const char *bus_poll(bus_t *bus, int flags);
+/* TODO bus_poll_timed */
 
 
 /**
