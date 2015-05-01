@@ -211,6 +211,20 @@ int bus_poll_start(bus_t *bus);
  * @return       0 on success, -1 on error
  */
 int bus_poll_stop(const bus_t *bus);
+
+/**
+ * Wait for a message to be broadcasted on the bus.
+ * The caller should make a copy of the received message,
+ * without freeing the original copy, and parse it in a
+ * separate thread. When the new thread has started be
+ * started, the caller of this function should then
+ * either call `bus_poll` again or `bus_poll_stop`.
+ * 
+ * @param   bus    Bus information
+ * @param   flags  `IPC_NOWAIT` if the bus should fail and set `errno` to
+ *                 `EAGAIN` if this isn't already a message available on the bus
+ * @return         The received message, `NULL` on error
+ */
 const char *bus_poll(bus_t *bus, int flags);
 
 
