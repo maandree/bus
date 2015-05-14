@@ -345,7 +345,7 @@ main(int argc, char *argv[])
 		/* TODO add -n */
 
 	/* Change permissions. */
-	} else if ((argc == 4) && !strcmp(argv[1], "chmod")) { /* TODO doc */
+	} else if ((argc == 4) && !strcmp(argv[1], "chmod")) {
 		t(parse_mode(argv[2], &mode_andnot, &mode_or));
 		t(stat(argv[3], &attr));
 		attr.st_mode &= ~mode_andnot;
@@ -353,7 +353,7 @@ main(int argc, char *argv[])
 		t(bus_chmod(argv[3], attr.st_mode));
 
 	/* Change ownership. */
-	} else if ((argc == 4) && !strcmp(argv[1], "chown")) { /* TODO doc */
+	} else if ((argc == 4) && !strcmp(argv[1], "chown")) {
 		if (strchr(argv[2], ':')) {
 			t(parse_owner(argv[2], &uid, &gid));
 			t(bus_chown(argv[3], uid, gid));
@@ -364,7 +364,7 @@ main(int argc, char *argv[])
 		}
 
 	/* Change group. */
-	} else if ((argc == 4) && !strcmp(argv[1], "chgrp")) { /* TODO doc */
+	} else if ((argc == 4) && !strcmp(argv[1], "chgrp")) {
 		t(parse_owner(argv[2], NULL, &gid));
 		t(stat(argv[3], &attr));
 		t(bus_chown(argv[3], attr.st_uid, gid));

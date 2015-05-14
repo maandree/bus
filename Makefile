@@ -16,7 +16,7 @@ MANDIR = ${DATADIR}/man
 PKGNAME = bus
 
 
-MAN1 = bus bus-broadcast bus-create bus-listen bus-remove bus-wait
+MAN1 = bus bus-broadcast bus-create bus-listen bus-remove bus-wait bus-chmod bus-chown bus-chgrp
 MAN3 = bus_create bus_unlink bus_open bus_close bus_read bus_write bus_poll bus_chmod bus_chown
 MAN5 = bus
 MAN7 = libbus

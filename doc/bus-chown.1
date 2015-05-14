@@ -1,0 +1,34 @@
+.TH BUS-CHOWN 1 BUS-%VERSION%
+.SH NAME
+bus chown - Change ownership of a bus
+.SH SYNOPSIS
+.B bus chown
+.IR owner[:group]
+.IR pathname
+.SH DESCRIPTION
+Change the owner, that owns a bus with an associated \fIpathname\fP,
+to the specified \fIowner\fP. The \fIowner\fP can be specified either
+with a UID or with a user name.
+If a \fIgroup\fP is specified, the bus's owner-group will be set to
+that \fIgroup\fP, otherwise the group will remain unchanged. The
+\fIgroup\fP can be specified either with a GID or with a group name.
+.SH EXIT STATUS
+.TP
+0
+The command was successful.
+.TP
+1
+The command failed.
+.TP
+2
+The command is not recognised.
+.SH SEE ALSO
+bus-chgrp(1), bus-chmod(1)
+.SH AUTHORS
+Principal author, Mattias Andrée.  See the LICENSE file for the full
+list of authors.
+.SH LICENSE
+MIT/X Consortium License.
+.SH BUGS
+Please report bugs to https://github.com/maandree/bus/issues or to
+maandree@member.fsf.org
