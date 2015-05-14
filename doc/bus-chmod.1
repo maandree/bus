@@ -16,6 +16,10 @@ permission to use the bus. Similarly the symbols \fB+\fP and
 \fB\-\fP can be used to grant and revoke access, respectively.
 The symbols \fB=\fP, \fB+\fP, and \fB\-\fP can be maked, and are
 interpreted from left to right.
+Alternatively the \fIpermissions\fP string can be a octal number,
+where the owner is represented by any bit in 700 (100, 200, or 400,
+or any combination thereof), the group is represented by any bit in 70,
+and others (not in the group)  is represented by any bit in 7.
 .SH EXIT STATUS
 .TP
 0
