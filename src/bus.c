@@ -745,14 +745,25 @@ done:
  * misbehave, is `bus_poll` is written to expect
  * this function to have been called.
  * 
- * @param   bus  Bus information
- * @return       0 on success, -1 on error
+ * @param   bus    Bus information
+ * @param   flags  `IPC_NOWAIT` if the bus should fail and set `errno` to
+ *                 `EAGAIN` if there isn't already a message available on
+ *                 the bus when `bus_poll` is called
+ * @return         0 on success, -1 on error
  */
 int
-bus_poll_start(bus_t *bus)
+bus_poll_start(bus_t *bus, int flags)
 {
 	bus->first_poll = 1;
-	return release_semaphore(bus, S, SEM_UNDO);
+	bus->flags = flags;
+	t(release_semaphore(bus, S, SEM_UNDO));
+	if (flags & BUS_NOWAIT) {
+		t(release_semaphore(bus, Q, 0));
+	}
+	return 0;
+
+fail:
+	return -1;
 }
 
 
@@ -779,29 +790,35 @@ bus_poll_stop(const bus_t *bus)
  * started, the caller of this function should then
  * either call `bus_poll` again or `bus_poll_stop`.
  * 
- * @param   bus    Bus information
- * @param   flags  `IPC_NOWAIT` if the bus should fail and set `errno` to
- *                 `EAGAIN` if this isn't already a message available on the bus
- * @return         The received message, `NULL` on error
+ * @param   bus  Bus information
+ * @return       The received message, `NULL` on error
  */
 const char *
-bus_poll(bus_t *bus, int flags)
+bus_poll(bus_t *bus)
 {
 	int state = 0, saved_errno;
-	(void) flags;
 	if (!bus->first_poll) {
 		t(release_semaphore(bus, W, SEM_UNDO));  state++;
 		t(acquire_semaphore(bus, S, SEM_UNDO));  state++;
 		t(zero_semaphore(bus, S, 0));
+#ifndef BUS_SEMAPHORES_ARE_SYNCHRONOUS_ME_HARDER
 		t(zero_semaphore(bus, N, 0));
+#endif
 		t(release_semaphore(bus, S, SEM_UNDO));  state--;
 		t(acquire_semaphore(bus, W, SEM_UNDO));  state--;
+		if (bus->flags & BUS_NOWAIT) {
+			t(release_semaphore(bus, Q, 0));
+		}
 	} else {
 		bus->first_poll = 0;
 	}
 	state--;
-	t(release_semaphore(bus, Q, 0));
-	t(zero_semaphore(bus, Q, F(BUS_NOWAIT, IPC_NOWAIT)));
+	if (bus->flags & BUS_NOWAIT) {
+		t(zero_semaphore(bus, Q, IPC_NOWAIT));
+	} else {
+		t(release_semaphore(bus, Q, 0));
+		t(zero_semaphore(bus, Q, 0));
+	}
 	return bus->message;
 
 fail:

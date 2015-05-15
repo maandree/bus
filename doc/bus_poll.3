@@ -6,9 +6,9 @@ bus_poll - Wait a message to be broadcasted
 .nf
 #include <bus.h>
 .P
-int bus_poll_start(bus_t *bus);
+int bus_poll_start(bus_t *bus, int flags);
 int bus_poll_stop(const bus_t *bus);
-const char * bus_poll(bus_t *bus, int flags);
+const char * bus_poll(bus_t *bus);
 .fi
 .SH DESCRIPTION
 The
@@ -16,7 +16,9 @@ The
 function waits for a message to broadcasted on the \fIbus\fP, and return
 the message it receives. The function fails if there is not already a
 message waiting on the bus when the function is called and (\fIflags\fP
-&BUS_NOWAIT). Received messages shall be copied and parsed, and acted
+&BUS_NOWAIT) was used the last time
+.BR bus_poll_start(3)
+was called. Received messages shall be copied and parsed, and acted
 upon, in a separate thread, and
 .BR bus_poll(3)
 or
