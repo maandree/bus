@@ -19,7 +19,7 @@ retry:
 	if (!WEXITSTATUS(system(arg))) {
 		t(bus_open(&bus, getenv("BUS_INIT"), BUS_WRONLY));
 		sprintf(arg, "0 %s %s", argv[2], argv[1]);
-		t(bus_write(&bus, arg));
+		t(bus_write(&bus, arg, 0));
 		bus_close(&bus);
 	} else if (!strcmp(argv[2], "started")) {
 		argv[2] = "ready";

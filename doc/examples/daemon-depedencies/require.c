@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 		sprintf(arg, "grep '^%s$' < \"${XDG_RUNTIME_DIR}/started-daemons\" >/dev/null", argv[i]);
 		if (WEXITSTATUS(system(arg))) {
 			sprintf(arg, "%ji require %s", (intmax_t)getppid(), argv[i]);
-			t(bus_write(&bus, arg));
+			t(bus_write(&bus, arg, 0));
 		}
 	}
 

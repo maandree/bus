@@ -17,7 +17,7 @@ int main()
 	sprintf(message, "%ji force-pause", (intmax_t)getppid());
 	/* Yes, PPID; in this example we pretend the shell is the telephony process. */
 	t(bus_open(&bus, "/tmp/example-bus", BUS_WRONLY));
-	t(bus_write(&bus, message));
+	t(bus_write(&bus, message, 0));
 	bus_close(&bus);
 	return 0;
 

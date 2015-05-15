@@ -25,7 +25,7 @@ static void announce_wait(pid_t pid)
 	for (i = 1; i < argc; i++) {
 		if (!started[i]) {
 			sprintf(arg, "%ji awaiting-started %s", (intmax_t)pid, argv[i]);
-			t(bus_write(&bus, arg));
+			t(bus_write(&bus, arg, 0));
 		}
 	}
 	t(bus_close(&bus));

@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 		return fprintf(stderr, "USAGE: %s state daemon", *argv), 2;
 	t(bus_open(&bus, getenv("BUS_INIT"), BUS_WRONLY));
 	sprintf(arg, "%ji %s %s", (intmax_t)getppid(), argv[1], argv[2]);
-	t(bus_write(&bus, arg));
+	t(bus_write(&bus, arg, 0));
 	t(bus_close(&bus));
 	return 0;
 
