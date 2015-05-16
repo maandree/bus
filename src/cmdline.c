@@ -116,6 +116,7 @@ parse_mode(const char *str, mode_t *andnot, mode_t *or)
 #define O  S_IRWXO
 	const char *s = str;
 	int numerical = 1;
+	mode_t mode = 0;
 	char op = '=';
 	int bits;
 
@@ -126,15 +127,17 @@ parse_mode(const char *str, mode_t *andnot, mode_t *or)
 		return errno = 0, -1;
 
 	for (s = str; *s; s++) {
-		if (('0' >= *s) || (*s >= '9')) {
+		if (('0' > *s) || (*s > '7')) {
 			numerical = 0;
 			break;
+		} else {
+			mode = (mode << 3) | (*s & 15);
 		}
 	}
 
 	if (numerical) {
 		*andnot = U | G | O;
-		*or = atoi(str);
+		*or = mode;
 		*or &= U | G | O;
 		*or = (*or & U) ? (*or | U) : (*or & ~U);
 		*or = (*or & G) ? (*or | G) : (*or & ~G);
@@ -146,9 +149,9 @@ parse_mode(const char *str, mode_t *andnot, mode_t *or)
 		if (strchr("+-=", *s)) {
 			op = *s;
 		} else if (strchr("ugo", *s)) {
-			if (*str == 'u')
+			if (*s == 'u')
 				bits = U;
-			else if (*str == 'g')
+			else if (*s == 'g')
 				bits = G;
 			else
 				bits = O;
@@ -176,8 +179,7 @@ parse_mode(const char *str, mode_t *andnot, mode_t *or)
 /**
  * Parse a user name/identifier string
  * 
- * @param   str  The user's name or identifier, parsings stops
- *               a the first ':' or and the end of the srting
+ * @param   str  The user's name or identifier
  * @param   uid  Output parameter for the user's identifier
  * @return       0 on success, -1 on error
  */
@@ -192,23 +194,24 @@ parse_uid(const char *str, uid_t *uid)
 	if (!*s || (*s == ':'))
 		return errno = 0, -1;
 
-	for (s = str; *s && (*s != ':'); s++) {
-		if (('0' >= *s) || (*s >= '9')) {
+	for (s = str; *s; s++) {
+		if (('0' > *s) || (*s > '9')) {
 			numerical = 0;
 			break;
 		}
 	}
 
 	if (numerical) {
-		for (s = str; !*s || (*s == ':'); s++)
+		for (s = str; *s; s++)
 			rc = (rc * 10) + (*s & 15);
 		*uid = rc;
 		return 0;
 	}
 
 	pwd = getpwnam(str);
-	if (!pwd)
+	if (!pwd) {
 		return -1;
+	}
 	*uid = pwd->pw_uid;
 	return 0;
 }
@@ -226,21 +229,21 @@ parse_gid(const char *str, gid_t *gid)
 {
 	const char *s = str;
 	int numerical = 1;
-	uid_t rc = 0;
+	gid_t rc = 0;
 	struct group *grp;
 
 	if (!*s || strchr(s, ':'))
 		return errno = 0, -1;
 
 	for (s = str; *s; s++) {
-		if (('0' >= *s) || (*s >= '9')) {
+		if (('0' > *s) || (*s > '9')) {
 			numerical = 0;
 			break;
 		}
 	}
 
 	if (numerical) {
-		for (s = str; !*s || (*s == ':'); s++)
+		for (s = str; *s; s++)
 			rc = (rc * 10) + (*s & 15);
 		*gid = rc;
 		return 0;
@@ -263,16 +266,20 @@ parse_gid(const char *str, gid_t *gid)
  * @return       0 on success, -1 on error
  */
 static int
-parse_owner(const char *str, uid_t *uid, gid_t *gid)
+parse_owner(char *str, uid_t *uid, gid_t *gid)
 {
 	int r = 0;
+	char* group;
 
 	if (!uid)
 		return parse_gid(str, gid);
 	if (!gid)
 		return parse_uid(str, uid);
 
-	r = parse_gid(strchr(str, ':') + 1, gid);
+	group = strchr(str, ':');
+	*group++ = 0;
+
+	r = parse_gid(group, gid);
 	if (r)
 		return r;
 	return parse_uid(str, uid);
