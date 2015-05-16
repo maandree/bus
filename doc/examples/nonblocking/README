@@ -1,0 +1,24 @@
+API usage example
+
+This example shows how to use bus_poll instead of bus_read,
+and how to do non-blocking polling and non-blocking writing.
+
+
+
+First of, run make to build this example.
+
+To start the example run ./init.
+When you are done run ./cleanup.
+
+Running instances of ./poll will check every second
+if there is a new inbound message. Between these checks
+./write will wait for all ./poll:s to receive the message.
+This means that ./write blocks while ./poll sleeps.
+If two or more instances of ./write is started at
+approximately the same time, only one will continue to
+write a message on the bus, the others will fail.
+
+./poll, ./init and ./cleanup are run without any
+additional arguments. ./write is run with the message
+as the second argument.
+
