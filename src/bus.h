@@ -206,7 +206,7 @@ int bus_read(const bus_t *bus, int (*callback)(const char *message, void *user_d
  * this function to have been called.
  * 
  * @param   bus    Bus information
- * @param   flags  `IPC_NOWAIT` if the bus should fail and set `errno` to
+ * @param   flags  `BUS_NOWAIT` if the bus should fail and set `errno` to
  *                 `EAGAIN` if there isn't already a message available on
  *                 the bus when `bus_poll` is called
  * @return         0 on success, -1 on error
