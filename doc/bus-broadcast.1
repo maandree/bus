@@ -3,10 +3,16 @@
 bus broadcast - Broadcast a message on a bus
 .SH SYNOPSIS
 .B bus broadcast
+.IR [options]
+[--]
 .IR pathname
 .IR message
 .SH DESCRIPTION
 Broadcast \fImessage\fP on the bus associated with \fIpathname\fP.
+.SH OPTIONS
+.TP
+.B \-n
+Fail if another process is attempting to broadcast on the bus.
 .SH EXIT STATUS
 .TP
 0

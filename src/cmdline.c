@@ -292,14 +292,14 @@ parse_owner(char *str, uid_t *uid, gid_t *gid)
  * 
  * @param   argc  The number of elements in `argv`
  * @param   argv  The command. Valid commands:
- *                  <argv0> create [<path>]                 # create a bus
- *                  <argv0> remove <path>                   # remove a bus
- *                  <argv0> listen <path> <command>         # listen for new messages
- *                  <argv0> wait <path> <command>           # listen for one new message
- *                  <argv0> broadcast <path> <message>      # broadcast a message
- *                  <argv0> chmod <mode> <path>             # change permissions
- *                  <argv0> chown <owner>[:<group>] <path>  # change ownership
- *                  <argv0> chgrp <group> <path>            # change group
+ *                  <argv0> create [-x] [--] [<path>]             # create a bus
+ *                  <argv0> remove [--] <path>                    # remove a bus
+ *                  <argv0> listen [--] <path> <command>          # listen for new messages
+ *                  <argv0> wait [--] <path> <command>            # listen for one new message
+ *                  <argv0> broadcast [-n] [--] <path> <message>  # broadcast a message
+ *                  <argv0> chmod [--] <mode> <path>              # change permissions
+ *                  <argv0> chown [--] <owner>[:<group>] <path>   # change ownership
+ *                  <argv0> chgrp [--] <group> <path>             # change group
  *                <command> will be spawned with $arg set to the message
  * @return        0 on sucess, 1 on error, 2 on invalid command
  */
@@ -312,69 +312,108 @@ main(int argc, char *argv[])
 	uid_t uid;
 	gid_t gid;
 	mode_t mode_andnot, mode_or;
+	int opt_x = 0, opt_n = 0;
+	const char *arg;
+	char **nonoptv = alloca(argc * sizeof(char*));
+	int nonoptc = 0;
 
-	argv0 = *argv;
+	argv0 = *argv++;
+	argc--;
+
+	/* Parse arguments. */
+	while (argc) {
+		if (!strcmp(*argv, "--")) {
+			argv++;
+			argc--;
+			break;
+		} else if (**argv == '-') {
+			arg = *argv++;
+			argc--;
+			for (arg++; *arg; arg++) {
+				if (*arg == 'x')
+					opt_x = 1;
+				else if (*arg == 'n')
+					opt_n = 1;
+				else
+					return -2;
+			}
+		} else {
+			*nonoptv++ = *argv++;
+			nonoptc++;
+			argc--;
+		}
+	}
+	while (argc) {
+		*nonoptv++ = *argv++;
+		nonoptc++;
+		argc--;
+	}
+	nonoptv -= nonoptc;
+
+	/* Check options. */
+	if (opt_x && strcmp(nonoptv[0], "create") && (nonoptc != 2))
+		return 2;
+	if (opt_n && strcmp(nonoptv[0], "broadcast") && (nonoptc != 3))
+		return 2;
 
 	/* Create a new bus with selected name. */
-	if ((argc == 3) && !strcmp(argv[1], "create")) {
-		t(bus_create(argv[2], 0, NULL));
-		/* TODO add -x */
+	if ((nonoptc == 2) && !strcmp(nonoptv[0], "create")) {
+		t(bus_create(nonoptv[1], opt_x * BUS_EXCL, NULL));
 
 	/* Create a new bus with random name. */
-	} else if ((argc == 2) && !strcmp(argv[1], "create")) {
+	} else if ((nonoptc == 1) && !strcmp(nonoptv[0], "create")) {
 		t(bus_create(NULL, 0, &file));
 		printf("%s\n", file);
 		free(file);
 
 	/* Remove a bus. */
-	} else if ((argc == 3) && !strcmp(argv[1], "remove")) {
-		t(bus_unlink(argv[2]));
+	} else if ((nonoptc == 2) && !strcmp(nonoptv[0], "remove")) {
+		t(bus_unlink(nonoptv[1]));
 
 	/* Listen on a bus in a loop. */
-	} else if ((argc == 4) && !strcmp(argv[1], "listen")) {
-		command = argv[3];
-		t(bus_open(&bus, argv[2], BUS_RDONLY));
+	} else if ((nonoptc == 3) && !strcmp(nonoptv[0], "listen")) {
+		command = nonoptv[2];
+		t(bus_open(&bus, nonoptv[1], BUS_RDONLY));
 		t(bus_read(&bus, spawn_continue, NULL));
 		t(bus_close(&bus));
 
 	/* Listen on a bus for one message. */
-	} else if ((argc == 4) && !strcmp(argv[1], "wait")) {
-		command = argv[3];
-		t(bus_open(&bus, argv[2], BUS_RDONLY));
+	} else if ((nonoptc == 3) && !strcmp(nonoptv[0], "wait")) {
+		command = nonoptv[2];
+		t(bus_open(&bus, nonoptv[1], BUS_RDONLY));
 		t(bus_read(&bus, spawn_break, NULL));
 		t(bus_close(&bus));
 
 	/* Broadcast a message on a bus. */
-	} else if ((argc == 4) && !strcmp(argv[1], "broadcast")) {
-		t(bus_open(&bus, argv[2], BUS_WRONLY));
-		t(bus_write(&bus, argv[3], 0));
+	} else if ((nonoptc == 3) && !strcmp(nonoptv[0], "broadcast")) {
+		t(bus_open(&bus, nonoptv[1], BUS_WRONLY));
+		t(bus_write(&bus, nonoptv[2], opt_n * BUS_NOWAIT));
 		t(bus_close(&bus));
-		/* TODO add -n */
 
 	/* Change permissions. */
-	} else if ((argc == 4) && !strcmp(argv[1], "chmod")) {
-		t(parse_mode(argv[2], &mode_andnot, &mode_or));
-		t(stat(argv[3], &attr));
+	} else if ((nonoptc == 3) && !strcmp(nonoptv[0], "chmod")) {
+		t(parse_mode(nonoptv[1], &mode_andnot, &mode_or));
+		t(stat(nonoptv[2], &attr));
 		attr.st_mode &= ~mode_andnot;
 		attr.st_mode |= mode_or;
-		t(bus_chmod(argv[3], attr.st_mode));
+		t(bus_chmod(nonoptv[2], attr.st_mode));
 
 	/* Change ownership. */
-	} else if ((argc == 4) && !strcmp(argv[1], "chown")) {
-		if (strchr(argv[2], ':')) {
-			t(parse_owner(argv[2], &uid, &gid));
-			t(bus_chown(argv[3], uid, gid));
+	} else if ((nonoptc == 3) && !strcmp(nonoptv[0], "chown")) {
+		if (strchr(nonoptv[1], ':')) {
+			t(parse_owner(nonoptv[1], &uid, &gid));
+			t(bus_chown(nonoptv[2], uid, gid));
 		} else {
-			t(parse_owner(argv[2], &uid, NULL));
-			t(stat(argv[3], &attr));
-			t(bus_chown(argv[3], uid, attr.st_gid));
+			t(parse_owner(nonoptv[1], &uid, NULL));
+			t(stat(nonoptv[2], &attr));
+			t(bus_chown(nonoptv[2], uid, attr.st_gid));
 		}
 
 	/* Change group. */
-	} else if ((argc == 4) && !strcmp(argv[1], "chgrp")) {
-		t(parse_owner(argv[2], NULL, &gid));
-		t(stat(argv[3], &attr));
-		t(bus_chown(argv[3], attr.st_uid, gid));
+	} else if ((nonoptc == 3) && !strcmp(nonoptv[0], "chgrp")) {
+		t(parse_owner(nonoptv[1], NULL, &gid));
+		t(stat(nonoptv[2], &attr));
+		t(bus_chown(nonoptv[2], attr.st_uid, gid));
 
 	} else
 		return 2;

@@ -3,11 +3,17 @@
 bus create - Create a bus
 .SH SYNOPSIS
 .B bus create
+.IR [options]
+[--]
 .IR [pathname]
 .SH DESCRIPTION
 Create a bus with an associated \fIpathname\fP. If \fIpathname\fP, a
 random pathname in \fI$XDG_RUNTIME_DIR/bus\fP will be created and
 printed to stdout.
+.SH OPTIONS
+.TP
+.B \-x
+Fail if the \fIpathname\fP already exists.
 .SH EXIT STATUS
 .TP
 0
