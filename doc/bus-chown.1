@@ -13,6 +13,10 @@ with a UID or with a user name.  If a \fIgroup\fP is specified, the
 bus's owner-group will be set to that \fIgroup\fP, otherwise the group
 will remain unchanged.  The \fIgroup\fP can be specified either with
 a GID or with a group name.
+.PP
+The current ownership of a bus can be retrieved by running
+.BR stat (1)
+over the \fIpathname\fP of the bus.
 .SH EXIT STATUS
 .TP
 0
@@ -25,7 +29,8 @@ The command failed.
 The command is not recognised.
 .SH SEE ALSO
 .BR bus-chgrp (1),
-.BR bus-chmod (1)
+.BR bus-chmod (1),
+.BR stat (1)
 .SH AUTHORS
 Principal author, Mattias Andrée.  See the LICENSE file for the full
 list of authors.

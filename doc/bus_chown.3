@@ -13,6 +13,10 @@ The
 .BR bus_chown ()
 function change the owner and the group of the bus associated with
 \fIfile\fP to the \fIowner\fP and \fIgroup\fP, respectively.
+.PP
+The current ownership of a bus can be retrieved by running
+.BR stat (3)
+over the \fIpathname\fP of the bus.
 .SH RETURN VALUES
 Upon successful completion, the function returns 0.  Otherwise the
 function returns -1 and sets \fIerrno\fP to indicate the error.
@@ -35,7 +39,8 @@ as well as any errors specified for the \fIIPC_STAT\fP and
 .BR bus (5),
 .BR libbus (7),
 .BR bus_open (3),
-.BR bus_read (3)
+.BR bus_read (3),
+.BR stat (3)
 .SH AUTHORS
 Principal author, Mattias Andrée.  See the LICENSE file for the full
 list of authors.

@@ -21,6 +21,10 @@ string can be a octal number, where the owner is represented by any
 bit in 700 (100, 200, or 400, or any combination thereof), the
 group is represented by any bit in 70, and others (not in the group)
 is represented by any bit in 7.
+.PP
+The current permissions of a bus can be retrieved by running
+.BR stat (1)
+over the \fIpathname\fP of the bus.
 .SH EXIT STATUS
 .TP
 0
@@ -33,7 +37,8 @@ The command failed.
 The command is not recognised.
 .SH SEE ALSO
 .BR bus-chown (1),
-.BR bus-chgrp (1)
+.BR bus-chgrp (1),
+.BR stat (1)
 .SH AUTHORS
 Principal author, Mattias Andrée.  See the LICENSE file for the full
 list of authors.
