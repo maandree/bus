@@ -2,19 +2,33 @@
 .SH NAME
 libbus - A simple daemonless system for broadcasting messages locally
 .SH DESCRIPTION
-\fBbus\fP is a stupid-simple, thrilless, daemonless interprocess
-communication system for broadcasting messages.
+.BR bus
+is a stupid-simple, thrilless, daemonless interprocess communication
+system for broadcasting messages.
 .SH RATIONALE
 We need an interprocess communication system similar to message queues.
 But we need broadcasting rather than anycasting, so we have a fast,
 simple and daemonless system for announcing events to any processes that
 might be interested.
 .SH FUTURE DIRECTION
-Timed out read and writes will be added.
+None.
 .SH SEE ALSO
-bus(1), bus(5), bus_create(3), bus_unlink(3), bus_open(3), bus_close(3),
-bus_write(3), bus_read(3), bus_poll_start(3), bus_poll_stop(3),
-bus_poll(3), bus_chown(3), bus_chmod(3)
+.BR bus (1),
+.BR bus (5),
+.BR bus_create (3),
+.BR bus_unlink (3),
+.BR bus_open (3),
+.BR bus_close (3),
+.BR bus_write (3),
+.BR bus_write_timed (3),
+.BR bus_read (3),
+.BR bus_read_timed (3),
+.BR bus_poll_start (3),
+.BR bus_poll_stop (3),
+.BR bus_poll (3),
+.BR bus_poll_timed (3),
+.BR bus_chown (3),
+.BR bus_chmod (3)
 .SH AUTHORS
 Principal author, Mattias Andrée.  See the LICENSE file for the full
 list of authors.

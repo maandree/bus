@@ -29,6 +29,7 @@
 # define _DEFAULT_SOURCE
 #endif
 #include <sys/types.h>
+#include <time.h>
 
 
 
@@ -158,7 +159,7 @@ int bus_close(bus_t *bus);
 
 
 /**
- * Broadcast a message a bus
+ * Broadcast a message on a bus
  * 
  * @param   bus      Bus information
  * @param   message  The message to write, may not be longer than
@@ -169,32 +170,78 @@ int bus_close(bus_t *bus);
  * @return           0 on success, -1 on error
  */
 int bus_write(const bus_t *bus, const char *message, int flags);
-/* TODO bus_write_timed */
+
+/**
+ * Broadcast a message on a bus
+ * 
+ * @param   bus      Bus information
+ * @param   message  The message to write, may not be longer than
+ *                   `BUS_MEMORY_SIZE` including the NUL-termination
+ * @param   timeout  The time the operation shall fail with errno set
+ *                   to `EAGAIN` if not completed
+ * @param   clockid  The ID of the clock the `timeout` is measured with,
+ *                   it most be a predictable clock
+ * @return           0 on success, -1 on error
+ */
+int bus_write_timed(const bus_t *bus, const char *message,
+		    const struct timespec *timeout, clockid_t clockid);
+
 
 /**
  * Listen (in a loop, forever) for new message on a bus
  * 
- * @param   bus       Bus information
- * @param   callback  Function to call when a message is received, the
- *                    input parameters will be the read message and
- *                    `user_data` from `bus_read`'s parameter with the
- *                    same name. The message must have been parsed or
- *                    copied when `callback` returns as it may be over
- *                    overridden after that time. `callback` should
- *                    return either of the the values:
- *                      *  0:  stop listening
- *                      *  1:  continue listening
- *                      * -1:  an error has occurred
- *		      However, the function [`bus_read`] will invoke
- *                    `callback` with `message` set to `NULL`one time
- *                    directly after it has started listening on the
- *                    bus. This is to the the program now it can safely
- *                    continue with any action that requires that the
- *                    programs is listening on the bus.
- * @return            0 on success, -1 on error
+ * @param   bus        Bus information
+ * @param   callback   Function to call when a message is received, the
+ *                     input parameters will be the read message and
+ *                     `user_data` from `bus_read`'s parameter with the
+ *                     same name. The message must have been parsed or
+ *                     copied when `callback` returns as it may be over
+ *                     overridden after that time. `callback` should
+ *                     return either of the the values:
+ *                       *  0:  stop listening
+ *                       *  1:  continue listening
+ *                       * -1:  an error has occurred
+ *                     However, the function [`bus_read`] will invoke
+ *                     `callback` with `message` set to `NULL`one time
+ *                     directly after it has started listening on the
+ *                     bus. This is to the the program now it can safely
+ *                     continue with any action that requires that the
+ *                     programs is listening on the bus.
+ * @param   user_data  Parameter passed to `callback`
+ * @return             0 on success, -1 on error
  */
 int bus_read(const bus_t *bus, int (*callback)(const char *message, void *user_data), void *user_data);
-/* TODO bus_read_timed */
+
+/**
+ * Listen (in a loop, forever) for new message on a bus
+ * 
+ * @param   bus        Bus information
+ * @param   callback   Function to call when a message is received, the
+ *                     input parameters will be the read message and
+ *                     `user_data` from `bus_read`'s parameter with the
+ *                     same name. The message must have been parsed or
+ *                     copied when `callback` returns as it may be over
+ *                     overridden after that time. `callback` should
+ *                     return either of the the values:
+ *                       *  0:  stop listening
+ *                       *  1:  continue listening
+ *                       * -1:  an error has occurred
+ *                     However, the function [`bus_read`] will invoke
+ *                     `callback` with `message` set to `NULL`one time
+ *                     directly after it has started listening on the
+ *                     bus. This is to the the program now it can safely
+ *                     continue with any action that requires that the
+ *                     programs is listening on the bus.
+ * @param   user_data  Parameter passed to `callback`
+ * @param   timeout    The time the operation shall fail with errno set
+ *                     to `EAGAIN` if not completed, note that the callback
+ *                     function may or may not have been called
+ * @param   clockid    The ID of the clock the `timeout` is measured with,
+ *                     it most be a predictable clock
+ * @return             0 on success, -1 on error
+ */
+int bus_read_timed(const bus_t *bus, int (*callback)(const char *message, void *user_data),
+		   void *user_data, const struct timespec *timeout, clockid_t clockid);
 
 
 /**
@@ -235,7 +282,23 @@ int bus_poll_stop(const bus_t *bus);
  * @return       The received message, `NULL` on error
  */
 const char *bus_poll(bus_t *bus);
-/* TODO bus_poll_timed */
+
+/**
+ * Wait for a message to be broadcasted on the bus.
+ * The caller should make a copy of the received message,
+ * without freeing the original copy, and parse it in a
+ * separate thread. When the new thread has started be
+ * started, the caller of this function should then
+ * either call `bus_poll_timed` again or `bus_poll_stop`.
+ * 
+ * @param   bus      Bus information
+ * @param   timeout  The time the operation shall fail with errno set
+ *                   to `EAGAIN` if not completed
+ * @param   clockid  The ID of the clock the `timeout` is measured with,
+ *                   it most be a predictable clock
+ * @return           The received message, `NULL` on error
+ */
+const char *bus_poll_timed(bus_t *bus, const struct timespec *timeout, clockid_t clockid);
 
 
 /**

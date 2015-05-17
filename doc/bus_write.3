@@ -1,31 +1,59 @@
 .TH BUS_WRITE 3 BUS-%VERSION%
 .SH NAME
-bus_write - Broadcast a message a bus
+bus_write, bus_write_timed - Broadcast a message a bus
 .SH SYNOPSIS
+.LP
+.nf
 #include <bus.h>
-
-int bus_write(const bus_t *bus, const char *message, int flags);
+.P
+int bus_write(const bus_t *\fIbus\fP, const char *\fImessage\fP, int \fIflags\fP);
+int bus_write_timed(const bus_t *\fIbus\fP, const char *\fImessage\fP,
+                    const struct timespec *\fItimeout\fP, clockid_t \fIclockid\fP);
+.fi
 .SH DESCRIPTION
-The \fIbus_write()\fP function broadcasts a message on the bus whose
-information is stored in \fIbus\fP.  The message read by the function is
-stored in the parameter \fImessage\fP.  It may not exceeed 2048 bytes,
-including NUL termination.
+The
+.BR bus_write ()
+function broadcasts a message on the bus whose information is stored in
+\fIbus\fP.  The message read by the function is stored in the parameter
+\fImessage\fP.  It may not exceeed 2048 bytes, including NULL termination.
 .PP
-The \fIbus_write()\fP function shall fail, and set \fIerrno\fP to
-\fIEAGAIN\fP, if the call would suspend the process and
-(\fIflags\fP &BUS_NOWAIT).
+The
+.BR bus_write ()
+function shall fail, and set \fIerrno\fP to \fIEAGAIN\fP, if the call
+would suspend the process and (\fIflags\fP &BUS_NOWAIT).
+.PP
+The
+.BR bus_write_timed ()
+function behaves like
+.BR bus_write (),
+except if it is not able to write the \fImessage\fP within the specified
+time, it will fail and set \fIerrno\fP to \fBEAGAIN\fP.  The time is
+specified as an absolute time using the parameter \fItimeout\fP.  The
+behaviour is unspecified if \fItimeout\fP is \fINULL\fP. \fItimeout\fP
+is measured with the clock whose ID is specified by the \fIclockid\fP
+parameter.  This clock must be a predicitable clock.
 .SH RETURN VALUES
-Upon successful completion, the function returns 0.  Otherwise the
+Upon successful completion, these functions returns 0.  Otherwise the
 function returns -1 and sets \fIerrno\fP to indicate the error.
 .SH ERRORS
 The
-.BR bus_write(3)
-function may fail and set \fIerrno\fP to any of the
-errors specified for
-.BR semop(3).
+.BR bus_write (3)
+function may fail and set \fIerrno\fP to any of the errors specified for
+.BR semop (3).
+The
+.BR bus_write_timed (3)
+function may also set \fIerrno\fP to any of the errors specified for
+.BR clock_gettime (3).
 .SH SEE ALSO
-bus-create(1), bus(5), libbus(7), bus_open(3), bus_read(3),
-bus_poll(3), bus_chown(3), bus_chmod(3)
+.BR bus-create (1),
+.BR bus (5),
+.BR libbus (7),
+.BR bus_open (3),
+.BR bus_read (3),
+.BR bus_poll (3),
+.BR bus_chown (3),
+.BR bus_chmod (3),
+.BR clock_gettime (3)
 .SH AUTHORS
 Principal author, Mattias Andrée.  See the LICENSE file for the full
 list of authors.

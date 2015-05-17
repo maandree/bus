@@ -2,12 +2,15 @@
 .SH NAME
 bus_close - Close a bus
 .SH SYNOPSIS
+.LP
+.nf
 #include <bus.h>
-
-int bus_close(bus_t *bus);
+.P
+int bus_close(bus_t *\fIbus\fP);
+.fi
 .SH DESCRIPTION
 The
-.BR bus_close(3)
+.BR bus_close (3)
 function disposes of resources allocated to the process, as referenced
 in the \fIbus\fP argument.
 .SH RETURN VALUES
@@ -18,7 +21,11 @@ function returns -1 and sets \fIerrno\fP to indicate the error.
 .B EINVAL
 The bus does not exist.
 .SH SEE ALSO
-bus-create(1), bus(5), libbus(7), bus_open(3), bus_unlink(3)
+.BR bus-create (1),
+.BR bus (5),
+.BR libbus (7),
+.BR bus_open (3),
+.BR bus_unlink (3)
 .SH AUTHORS
 Principal author, Mattias Andrée.  See the LICENSE file for the full
 list of authors.

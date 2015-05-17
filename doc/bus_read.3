@@ -1,16 +1,22 @@
 .TH BUS_READ 3 BUS-%VERSION%
 .SH NAME
-bus_read - Listen for new messages a bus
+bus_read, bus_read_timed - Listen for new messages a bus
 .SH SYNOPSIS
+.LP
+.nf
 #include <bus.h>
-
-int bus_read(const bus_t *bus, int (*callback)(const char *message, void *user_data), void *user_data);
+.P
+int bus_read(const bus_t *\fIbus\fP, int (*\fIcallback\fP)(const char *\fImessage\fP, void *\fIuser_data\fP),
+             void *\fIuser_data\fP);
+int bus_read_timed(const bus_t *\fIbus\fP, int (*\fIcallback\fP)(const char *\fImessage\fP, void *\fIuser_data\fP),
+                   void *\fIuser_data\fP, const struct timespec *\fItimeout\fP, clockid_t \fIclockid\fP);
+.fi
 .SH DESCRIPTION
 The
-.BR bus_read(3)
+.BR bus_read ()
 function waits for new message to be sent on the bus specified in
 \fIbus\fP, as provieded by a previous call to the
-.BR bus_open(3)
+.BR bus_open ()
 function.  Once a message is received, the \fIcallback\fP function is
 invoked.  The \fImessage\fP argument to the callback is the received
 message, and \fIuser_data\fP for \fIcallback\fP should be
@@ -20,22 +26,46 @@ invoke the \fIcallback\fP function with \fImessage\fP set to \fINULL\fP,
 to notify the process that it can perform any action that requires that
 it is listening on the bus.
 .PP
-After \fIcallback\fP returns, \fImessage\fP may be override. Therefore
+After \fIcallback\fP returns, \fImessage\fP may be override.  Therefore
 \fIcallback\fP should copy \fImessage\fP and start a new thread that
-uses the copy of \fImessage\fP. \fIcallback\fP shall return -1 on
-failure, 0 if \fIbus_read\fP should stop listening or 1 if
-\fIbus_read\fP should continue listening.
+uses the copy of \fImessage\fP.  \fIcallback\fP shall return -1 on
+failure, 0 if
+.BR bus_read ()
+should stop listening or 1 if
+.BR bus_read ()
+should continue listening.
+.PP
+The
+.BR bus_read_timed ()
+function behaves like
+.BR bus_read (),
+except it will automatically fail and set \fIerrno\fP to \fBEAGAIN\fP
+when the time specified specified time has passed. The time is specified
+as an absolute time using the parameter \fItimeout\fP.  The behaviour is
+unspecified if \fItimeout\fP is \fINULL\fP.  \fItimeout\fP is measured
+with the clock whose ID is specified by the \fIclockid\fP parameter.
+This clock must be a predicitable clock.
 .SH RETURN VALUES
-Upon successful completion, the function returns 0.  Otherwise the
+Upon successful completion, these functions returns 0.  Otherwise the
 function returns -1 and sets \fIerrno\fP to indicate the error.
 .SH ERRORS
 The
-.BR bus_read(3)
+.BR bus_read (3)
 function may fail and set \fIerrno\fP to any of the errors specified for
-.BR semop(3).
+.BR semop (3).
+The
+.BR bus_read_timed (3)
+function may also set \fIerrno\fP to any of the errors specified for
+.BR clock_gettime (3).
 .SH SEE ALSO
-bus-create(1), bus(5), libbus(7), bus_open(3), bus_write(3),
-bus_poll(3), semop(3)
+.BR bus-create (1),
+.BR bus (5),
+.BR libbus (7),
+.BR bus_open (3),
+.BR bus_write (3),
+.BR bus_poll (3),
+.BR semop (3),
+.BR clock_gettime (3)
 .SH AUTHORS
 Principal author, Mattias Andrée.  See the LICENSE file for the full
 list of authors.

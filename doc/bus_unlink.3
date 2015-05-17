@@ -2,12 +2,15 @@
 .SH NAME
 bus_unlink - Remove a bus
 .SH SYNOPSIS
+.LP
+.nf
 #include <bus.h>
-
-int bus_unlink(const char *file);
+.P
+int bus_unlink(const char *\fIfile\fP);
+.fi
 .SH DESCRIPTION
 The
-.BR bus_unlink(3)
+.BR bus_unlink ()
 function removes the bus assoicated with the pathname stored in
 \fIfile\fP.  The function also unlinks the file.
 .SH RETURN VALUES
@@ -25,17 +28,24 @@ Operation permission is denied to the calling process.
 The user does not have permission to remove the bus.
 .PP
 The
-.BR bus_unlink(3)
+.BR bus_unlink (3)
 function may also fail and set \fIerrno\fP to any of the errors
 specified for the routines
-.BR unlink(2),
-.BR open(2),
-.BR semget(3)
+.BR unlink (2),
+.BR open (2),
+.BR semget (3)
 and
-.BR shmget(3).
+.BR shmget (3).
 .SH SEE ALSO
-bus-create(1), bus(5), libbus(7), bus_create(3), bus_close(3),
-unlink(2), open(2), semget(3) and shmget(3)
+.BR bus-create (1),
+.BR bus (5),
+.BR libbus (7),
+.BR bus_create (3),
+.BR bus_close (3),
+.BR unlink (2),
+.BR open (2),
+.BR semget (3),
+.BR shmget (3)
 .SH AUTHORS
 Principal author, Mattias Andrée.  See the LICENSE file for the full
 list of authors.

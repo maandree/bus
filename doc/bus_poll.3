@@ -1,61 +1,88 @@
 .TH BUS_POLL 3 BUS-%VERSION%
 .SH NAME
-bus_poll - Wait a message to be broadcasted
+bus_poll_start, bus_poll_stop, bus_poll, bus_poll_timed - Wait a message to be broadcasted
 .SH SYNOPSIS
 .LP
 .nf
 #include <bus.h>
 .P
-int bus_poll_start(bus_t *bus, int flags);
-int bus_poll_stop(const bus_t *bus);
-const char * bus_poll(bus_t *bus);
+int bus_poll_start(bus_t *\fIbus\fP, int \fIflags\fP);
+int bus_poll_stop(const bus_t *\fIbus\fP);
+const char *bus_poll(bus_t *\fIbus\fP);
+const char *bus_poll_timed(bus_t *\fIbus\fP, const struct timespec *\fItimeout\fP, clockid_t \fIclockid\fP);
 .fi
 .SH DESCRIPTION
 The
-.BR bus_poll(3)
+.BR bus_poll ()
 function waits for a message to broadcasted on the \fIbus\fP, and return
-the message it receives. The function fails if there is not already a
+the message it receives.  The function fails if there is not already a
 message waiting on the bus when the function is called and (\fIflags\fP
 &BUS_NOWAIT) was used the last time
-.BR bus_poll_start(3)
-was called. Received messages shall be copied and parsed, and acted
+.BR bus_poll_start ()
+was called.  Received messages shall be copied and parsed, and acted
 upon, in a separate thread, and
-.BR bus_poll(3)
+.BR bus_poll ()
 or
-.BR bus_poll_stop(3)
+.BR bus_poll_stop ()
 called again as soon as possible.
 .PP
 The
-.BR bus_poll_start(3)
+.BR bus_poll_start ()
 funcion must be called before
-.BR bus_poll(3)
-is called for the first time. When the process is done listening on the
+.BR bus_poll ()
+is called for the first time.  When the process is done listening on the
 bus it must call the
-.BR bus_poll_stop(3)
+.BR bus_poll_stop ()
 function.
+.PP
+The
+.BR bus_poll_timed ()
+function behaves like
+.BR bus_poll (),
+except if it is not able to read a message within the specified time,
+it will fail and set \fIerrno\fP to \fBEAGAIN\fP.  The time is specified
+as an absolute time using the parameter \fItimeout\fP.  The behaviour is
+unspecified if \fItimeout\fP is \fINULL\fP. \fItimeout\fP is measured
+with the clock whose ID is specified by the \fIclockid\fP parameter.  This
+clock must be a predicitable clock.  Additionally, the
+.BR bus_poll_start ()
+function must not have been called with (\fIflags\fP &BUS_NOWAIT),
+otherwise the behaviour is undefined.
 .SH RETURN VALUES
 Upon successful completion, the functions
-.BR bus_poll_start(3)
+.BR bus_poll_start ()
 and
-.BR bus_poll_stop(3)
+.BR bus_poll_stop ()
 returns 0.  Otherwise the functions returns -1 and sets \fIerrno\fP to
 indicate the error.
 .PP
-Upon successful completion, the function
-.BR bus_poll(3)
+Upon successful completion, the functions
+.BR bus_poll ()
+and
+.BR bus_poll_timed ()
 returns the received message.  Otherwise the function returns \fINULL\fP
 and sets \fIerrno\fP to indicate the error.
 .SH ERRORS
 The
-.BR bus_poll(3),
-.BR bus_poll_start(3)
+.BR bus_poll (3),
+.BR bus_poll_start (3)
 and
-.BR bus_poll_stop(3)
+.BR bus_poll_stop (3)
 functions may fail and set \fIerrno\fP to any of the errors specified for
-.BR semop(3).
+.BR semop (3).
+The
+.BR bus_poll_timed (3)
+function may also set \fIerrno\fP to any of the errors specified for
+.BR clock_gettime (3).
 .SH SEE ALSO
-bus-create(1), bus(5), libbus(7), bus_open(3), bus_write(3),
-bus_read(3), semop(3)
+.BR bus-create (1),
+.BR bus (5),
+.BR libbus (7),
+.BR bus_open (3),
+.BR bus_write (3),
+.BR bus_read (3),
+.BR semop (3),
+.BR clock_gettime (3)
 .SH AUTHORS
 Principal author, Mattias Andrée.  See the LICENSE file for the full
 list of authors.

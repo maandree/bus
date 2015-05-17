@@ -68,12 +68,12 @@ bin/libbus.a: obj/bus-fpic.o
 bin/bus: obj/cmdline-nofpic.o obj/bus-nofpic.o
 	@echo CC -o $@
 	@mkdir -p bin
-	@${CC} ${FLAGS} -o $@ $^ ${LDFLAGS}
+	@${CC} ${FLAGS} -lrt -o $@ $^ ${LDFLAGS}
 
 bin/libbus.so.${LIB_VERSION}: obj/bus-fpic.o
 	@echo CC -o $@
 	@mkdir -p bin
-	@${CC} ${FLAGS} -shared -Wl,-soname,libbus.so.${LIB_MAJOR} -o $@ $^ ${LDFLAGS}
+	@${CC} ${FLAGS} -lrt -shared -Wl,-soname,libbus.so.${LIB_MAJOR} -o $@ $^ ${LDFLAGS}
 
 bin/libbus.so.${LIB_MAJOR}:
 	@echo LN -s $@
@@ -161,6 +161,9 @@ uninstall:
 	-rm -- $(foreach M,${MAN3},"${DESTDIR}${MANDIR}/man3/${M}.3")
 	-rm -- "${DESTDIR}${MANDIR}/man3/bus_poll_start.3"
 	-rm -- "${DESTDIR}${MANDIR}/man3/bus_poll_stop.3"
+	-rm -- "${DESTDIR}${MANDIR}/man3/bus_poll_timed.3"
+	-rm -- "${DESTDIR}${MANDIR}/man3/bus_read_timed.3"
+	-rm -- "${DESTDIR}${MANDIR}/man3/bus_write_timed.3"
 	-rm -- $(foreach M,${MAN5},"${DESTDIR}${MANDIR}/man5/${M}.5")
 	-rm -- $(foreach M,${MAN7},"${DESTDIR}${MANDIR}/man7/${M}.7")
 

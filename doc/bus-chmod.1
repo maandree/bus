@@ -10,17 +10,17 @@ bus chmod - Change permissions on a bus
 Change whom as access to a bus with an associated \fIpathname\fP.
 In the \fIpermissions\fP, the owner, the group, and others (not
 in group) are represented by the symbols \fBu\fP, \fBg\fP, and
-\fBo\fP, respectively. The \fIpermissions\fP string is imagined
-to have always be prefixed with an \fB=\fP. This symbols means
+\fBo\fP, respectively.  The \fIpermissions\fP string is imagined
+to have always be prefixed with an \fB=\fP.  This symbols means
 that all user classes list after it, and only those classes, as
-permission to use the bus. Similarly the symbols \fB+\fP and
+permission to use the bus.  Similarly the symbols \fB+\fP and
 \fB\-\fP can be used to grant and revoke access, respectively.
 The symbols \fB=\fP, \fB+\fP, and \fB\-\fP can be maked, and are
-interpreted from left to right.
-Alternatively the \fIpermissions\fP string can be a octal number,
-where the owner is represented by any bit in 700 (100, 200, or 400,
-or any combination thereof), the group is represented by any bit in 70,
-and others (not in the group)  is represented by any bit in 7.
+interpreted from left to right.  Alternatively the \fIpermissions\fP
+string can be a octal number, where the owner is represented by any
+bit in 700 (100, 200, or 400, or any combination thereof), the
+group is represented by any bit in 70, and others (not in the group)
+is represented by any bit in 7.
 .SH EXIT STATUS
 .TP
 0
@@ -32,7 +32,8 @@ The command failed.
 2
 The command is not recognised.
 .SH SEE ALSO
-bus-chown(1), bus-chgrp(1)
+.BR bus-chown (1),
+.BR bus-chgrp (1)
 .SH AUTHORS
 Principal author, Mattias Andrée.  See the LICENSE file for the full
 list of authors.

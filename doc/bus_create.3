@@ -2,12 +2,15 @@
 .SH NAME
 bus_create - Create a new bus
 .SH SYNOPSIS
+.LP
+.nf
 #include <bus.h>
-
-int bus_create(const char * \fIfile\fP, int  \fIflags\fP, char ** \fIout_file\fP);
+.P
+int bus_create(const char *\fIfile\fP, int \fIflags\fP, char **\fIout_file\fP);
+.fi
 .SH DESCRIPTION
 The
-.BR bus_create(3)
+.BR bus_create ()
 function creates a bus with the asscoiated pathname specifed by the
 value of the parameter \fIfile\fP.  If \fIfile\fP is \fINULL\fP a random
 pathname is selected.  This pathname adheres to the convention set forth
@@ -15,10 +18,10 @@ by
 .BR bus(5).
 .PP
 If \fIfile\fP is not \fINULL\fP the
-.BR bus_create(3)
+.BR bus_create ()
 function fails if the file already exists if \fIflags\fP contains
 \fIBUS_EXCL\fP.  Otherwise if \fIfile\fP is not \fINULL\fP, the
-.BR bus_create(3)
+.BR bus_create ()
 function does nothing if the file already exists.
 .PP
 If \fIflags\fP contains \fIBUS_INTR\fP, the function fails if it is
@@ -36,14 +39,20 @@ function return -1 with \fIerrno\fP set to indicate the error.
 The process cannot allocate more memory.
 .PP
 The
-.BR bus_create(3)
+.BR bus_create (3)
 function may also fail and set \fIerrno\fP to any
 of the errors specified for the routines
-.BR open(2)
+.BR open (2)
 and
-.BR write(2).
+.BR write (2).
 .SH SEE ALSO
-bus-create(1), bus(5), libbus(7), bus_unlink(3), bus_open(3), open(2), write(2)
+.BR bus-create (1),
+.BR bus (5),
+.BR libbus (7),
+.BR bus_unlink (3),
+.BR bus_open (3),
+.BR open (2),
+.BR write (2)
 .SH AUTHORS
 Principal author, Mattias Andrée.  See the LICENSE file for the full
 list of authors.

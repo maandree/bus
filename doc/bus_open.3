@@ -2,16 +2,19 @@
 .SH NAME
 bus_open - Open a bus
 .SH SYNOPSIS
+.LP
+.nf
 #include <bus.h>
-
-int bus_open(bus_t *bus, const char *file, int flags);
+.P
+int bus_open(bus_t *\fIbus\fP, const char *\fIfile\fP, int \fIflags\fP);
+.fi
 .SH DESCRIPTION
 The
-.BR bus_open(3)
+.BR bus_open ()
 function acquires resources required for the process to use the bus
 associated with the filename stored in \fIfile\fP.  The function also
 stores the resource \fIbus\fP for use by other
-.BR bus(5)
+.BR bus ()
 functions.
 .PP
 Values for \fIflags\fP are constructed by a bitwise inclusive OR of
@@ -40,13 +43,20 @@ Operation permission is denied to the calling process.
 The described bus does not exist.
 .PP
 The
-.BR bus_open(3)
+.BR bus_open ()
 function may also fail and set \fIerrno\fP to any of the errors
 specified for the routine
-.BR open(2).
+.BR open (2).
 .SH SEE ALSO
-bus-create(1), bus(5), libbus(7), bus_close(3), bus_unlink(3),
-bus_write(3), bus_read(3), bus_poll(3), open(2)
+.BR bus-create (1),
+.BR bus (5),
+.BR libbus (7),
+.BR bus_close (3),
+.BR bus_unlink (3),
+.BR bus_write (3),
+.BR bus_read (3),
+.BR bus_poll (3),
+.BR open (2)
 .SH AUTHORS
 Principal author, Mattias Andrée.  See the LICENSE file for the full
 list of authors.
