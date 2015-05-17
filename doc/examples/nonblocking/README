@@ -18,6 +18,8 @@ If two or more instances of ./write is started at
 approximately the same time, only one will continue to
 write a message on the bus, the others will fail.
 
+./poll will stop if the message "stop" is broadcasted.
+
 ./poll, ./init and ./cleanup are run without any
 additional arguments. ./write is run with the message
 as the second argument.

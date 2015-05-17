@@ -15,6 +15,9 @@ continuously, but with one second timeouts.
 Running instances of ./read will read for ten seconds
 then time out.
 
+./poll and ./read will stop if the message "stop" is
+broadcasted.
+
 ./poll, ./read, ./init and ./cleanup are run without any
 additional arguments. ./write is run with the message
 as the second argument.
