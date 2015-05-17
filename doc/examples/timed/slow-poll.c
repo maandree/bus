@@ -31,6 +31,7 @@ main()
 		if (!strcmp(message, "stop"))
 			break;
 		printf("\033[01m%s\033[21m\n", message);
+		sleep(1);
 	}
 	t(bus_poll_stop(&bus));
 	bus_close(&bus);

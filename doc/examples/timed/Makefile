@@ -1,4 +1,4 @@
-COMMANDS = init cleanup write poll read
+COMMANDS = init cleanup write poll read slow-poll
 
 all: ${COMMANDS}
 

@@ -12,11 +12,19 @@ When you are done run ./cleanup.
 Running instances of ./poll will wait for new messages
 continuously, but with one second timeouts.
 
+./slow-poll works like ./poll, execpt it will sleep
+for one second every time it receives a message.
+
 Running instances of ./read will read for ten seconds
 then time out.
 
-./poll and ./read will stop if the message "stop" is
-broadcasted.
+./poll, ./read, and ./slow-poll will stop if the message
+"stop" is broadcasted.
+
+./write will wait for atmost a tenth of a seconds before
+failing. This means that if two instances of ./write is
+started at the same time one of them will fail if
+./slow-poll is running.
 
 ./poll, ./read, ./init and ./cleanup are run without any
 additional arguments. ./write is run with the message
