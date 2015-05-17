@@ -11,7 +11,8 @@
 static char arg[4098];
 
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
 	if (argc != 2)
 		return fprintf(stderr, "This program should be called from ./init\n"), 2;

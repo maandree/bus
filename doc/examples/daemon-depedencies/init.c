@@ -14,7 +14,8 @@ static char **argv;
 static char arg[4098];
 
 
-static void start_daemons()
+static void
+start_daemons()
 {
 	int i;
 	for (i = 1; i < argc; i++)
@@ -23,7 +24,8 @@ static void start_daemons()
 }
 
 
-static int callback(const char *message, void *user_data)
+static int
+callback(const char *message, void *user_data)
 {
 	pid_t pid;
 	char *arg2;
@@ -91,7 +93,8 @@ fail:
 }
 
 
-int main(int argc_, char *argv_[])
+int
+main(int argc_, char *argv_[])
 {
 	char *bus_address = NULL;
 	bus_t bus;

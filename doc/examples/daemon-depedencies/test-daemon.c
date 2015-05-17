@@ -9,7 +9,8 @@
 static char arg[4098];
 
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
 	bus_t bus;
 	if (argc != 3)

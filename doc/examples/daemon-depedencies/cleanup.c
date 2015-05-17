@@ -6,7 +6,8 @@
 
 
 
-int main()
+int
+main()
 {
 	char *bus_address = getenv("BUS_INIT");
 	if (!bus_address || !*bus_address) {

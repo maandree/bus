@@ -13,7 +13,8 @@ static char* pausers = NULL;
 
 
 
-static int is_moc_playing(void)
+static int
+is_moc_playing(void)
 {
 	return !WEXITSTATUS(system("env LANG=C mocp -i 2>/dev/null | grep 'State: PLAY' >/dev/null"));
 }
@@ -25,7 +26,8 @@ static int is_moc_playing(void)
  * too much for an example, especially since it would also require
  * a mutex to make sure two threads do not modify data at the same
  * time, causing chaos. */
-static int callback(const char *message, void *user_data)
+static int
+callback(const char *message, void *user_data)
 {
  	char *msg = NULL;
 	size_t len = 0;
@@ -83,7 +85,8 @@ done:
 
 
 
-int main()
+int
+main()
 {
 	bus_t bus;
 	t(bus_open(&bus, "/tmp/example-bus", BUS_RDONLY));

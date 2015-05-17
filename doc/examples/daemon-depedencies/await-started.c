@@ -17,7 +17,8 @@ static char *started = NULL;
 static char msg[BUS_MEMORY_SIZE];
 
 
-static void announce_wait(pid_t pid)
+static void
+announce_wait(pid_t pid)
 {
 	bus_t bus;
 	int i;
@@ -36,7 +37,8 @@ fail:
 }
 
 
-static int callback(const char *message, void *user_data)
+static int
+callback(const char *message, void *user_data)
 {
 	int i;
 	char *arg2;
@@ -80,7 +82,8 @@ static int callback(const char *message, void *user_data)
 }
 
 
-int main(int argc_, char *argv_[])
+int
+main(int argc_, char *argv_[])
 {
 	bus_t bus;
 	int i;

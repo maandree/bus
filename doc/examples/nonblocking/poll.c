@@ -8,7 +8,8 @@
 
 
 
-int main()
+int
+main()
 {
 	bus_t bus;
 	const char *message;

@@ -11,7 +11,8 @@ static char message[BUS_MEMORY_SIZE];
 
 
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
 	bus_t bus;
 	if (argc < 2) {

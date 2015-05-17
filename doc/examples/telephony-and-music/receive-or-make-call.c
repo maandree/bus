@@ -11,7 +11,8 @@ static char message[BUS_MEMORY_SIZE];
 
 
 
-int main()
+int
+main()
 {
 	bus_t bus;
 	sprintf(message, "%ji force-pause", (intmax_t)getppid());

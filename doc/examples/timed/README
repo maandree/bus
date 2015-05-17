@@ -12,7 +12,10 @@ When you are done run ./cleanup.
 Running instances of ./poll will wait for new messages
 continuously, but with one second timeouts.
 
-./poll, ./init and ./cleanup are run without any
+Running instances of ./read will read for ten seconds
+then time out.
+
+./poll, ./read, ./init and ./cleanup are run without any
 additional arguments. ./write is run with the message
 as the second argument.
 
