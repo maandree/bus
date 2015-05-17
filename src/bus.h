@@ -247,11 +247,8 @@ int bus_read_timed(const bus_t *bus, int (*callback)(const char *message, void *
  * misbehave, is `bus_poll` is written to expect
  * this function to have been called.
  * 
- * @param   bus    Bus information
- * @param   flags  `BUS_NOWAIT` if the bus should fail and set `errno` to
- *                 `EAGAIN` if there isn't already a message available on
- *                 the bus when `bus_poll` is called
- * @return         0 on success, -1 on error
+ * @param   bus  Bus information
+ * @return       0 on success, -1 on error
  */
 int bus_poll_start(bus_t *bus);
 
@@ -273,8 +270,10 @@ int bus_poll_stop(const bus_t *bus);
  * started, the caller of this function should then
  * either call `bus_poll` again or `bus_poll_stop`.
  * 
- * @param   bus  Bus information
- * @return       The received message, `NULL` on error
+ * @param   bus    Bus information
+ * @param   flags  `BUS_NOWAIT` if the bus should fail and set `errno` to
+ *                 `EAGAIN` if there isn't already a message available on the bus
+ * @return         The received message, `NULL` on error
  */
 const char *bus_poll(bus_t *bus, int flags);
 

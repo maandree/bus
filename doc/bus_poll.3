@@ -6,21 +6,18 @@ bus_poll_start, bus_poll_stop, bus_poll, bus_poll_timed - Wait a message to be b
 .nf
 #include <bus.h>
 .P
-int bus_poll_start(bus_t *\fIbus\fP, int \fIflags\fP);
+int bus_poll_start(bus_t *\fIbus\fP);
 int bus_poll_stop(const bus_t *\fIbus\fP);
-const char *bus_poll(bus_t *\fIbus\fP);
+const char *bus_poll(bus_t *\fIbus\fP, int \fIflags\fP);
 const char *bus_poll_timed(bus_t *\fIbus\fP, const struct timespec *\fItimeout\fP, clockid_t \fIclockid\fP);
 .fi
 .SH DESCRIPTION
 The
 .BR bus_poll ()
 function waits for a message to broadcasted on the \fIbus\fP, and return
-the message it receives.  The function fails if there is not already a
-message waiting on the bus when the function is called and (\fIflags\fP
-&BUS_NOWAIT) was used the last time
-.BR bus_poll_start ()
-was called.  Received messages shall be copied and parsed, and acted
-upon, in a separate thread, and
+the message it receives.  The function fails if (\fIflags\fP &BUS_NOWAIT)
+and there is not already a message waiting on the bus.  Received messages
+shall be copied and parsed, and acted upon, in a separate thread, and
 .BR bus_poll ()
 or
 .BR bus_poll_stop ()
@@ -44,10 +41,7 @@ it will fail and set \fIerrno\fP to \fBEAGAIN\fP.  The time is specified
 as an absolute time using the parameter \fItimeout\fP.  The behaviour is
 unspecified if \fItimeout\fP is \fINULL\fP. \fItimeout\fP is measured
 with the clock whose ID is specified by the \fIclockid\fP parameter.  This
-clock must be a predicitable clock.  Additionally, the
-.BR bus_poll_start ()
-function must not have been called with (\fIflags\fP &BUS_NOWAIT),
-otherwise the behaviour is undefined.
+clock must be a predicitable clock.
 .SH RETURN VALUES
 Upon successful completion, the functions
 .BR bus_poll_start ()
