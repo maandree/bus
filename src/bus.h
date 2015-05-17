@@ -107,11 +107,6 @@ typedef struct bus
 	 */
 	int first_poll;
 
-	/**
-	 * Flags used for polling
-	 */
-	int flags;
-
 } bus_t;
 
 
@@ -258,7 +253,7 @@ int bus_read_timed(const bus_t *bus, int (*callback)(const char *message, void *
  *                 the bus when `bus_poll` is called
  * @return         0 on success, -1 on error
  */
-int bus_poll_start(bus_t *bus, int flags);
+int bus_poll_start(bus_t *bus);
 
 /**
  * Announce that the thread has stopped listening on the bus.
@@ -281,7 +276,7 @@ int bus_poll_stop(const bus_t *bus);
  * @param   bus  Bus information
  * @return       The received message, `NULL` on error
  */
-const char *bus_poll(bus_t *bus);
+const char *bus_poll(bus_t *bus, int flags);
 
 /**
  * Wait for a message to be broadcasted on the bus.

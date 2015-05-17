@@ -13,10 +13,13 @@ int main()
 	bus_t bus;
 	const char *message;
 	long long tick = 0;
+	struct timespec timeout;
 	t(bus_open(&bus, "/tmp/example-bus", BUS_RDONLY));
 	t(bus_poll_start(&bus));
 	for (;;) {
-		message = bus_poll(&bus, BUS_NOWAIT);
+		t(clock_gettime(CLOCK_MONOTONIC, &timeout));
+		timeout.tv_sec += 1;
+		message = bus_poll_timed(&bus, &timeout, CLOCK_MONOTONIC);
 		if (message == NULL) {
 			t(errno != EAGAIN);
 			printf("waiting... %lli\n", ++tick);

@@ -985,14 +985,11 @@ done:
  * @return         0 on success, -1 on error
  */
 int
-bus_poll_start(bus_t *bus, int flags)
+bus_poll_start(bus_t *bus)
 {
 	bus->first_poll = 1;
-	bus->flags = flags;
 	t(release_semaphore(bus, S, SEM_UNDO));
-	if (flags & BUS_NOWAIT) {
-		t(release_semaphore(bus, Q, 0));
-	}
+	t(release_semaphore(bus, Q, 0));
 	return 0;
 
 fail:
@@ -1027,7 +1024,7 @@ bus_poll_stop(const bus_t *bus)
  * @return       The received message, `NULL` on error
  */
 const char *
-bus_poll(bus_t *bus)
+bus_poll(bus_t *bus, int flags)
 {
 	int state = 0, saved_errno;
 	if (!bus->first_poll) {
@@ -1039,19 +1036,12 @@ bus_poll(bus_t *bus)
 #endif
 		t(release_semaphore(bus, S, SEM_UNDO));  state--;
 		t(acquire_semaphore(bus, W, SEM_UNDO));  state--;
-		if (bus->flags & BUS_NOWAIT) {
-			t(release_semaphore(bus, Q, 0));
-		}
+		t(release_semaphore(bus, Q, 0));
 	} else {
 		bus->first_poll = 0;
 	}
 	state--;
-	if (bus->flags & BUS_NOWAIT) {
-		t(zero_semaphore(bus, Q, IPC_NOWAIT));
-	} else {
-		t(release_semaphore(bus, Q, 0));
-		t(zero_semaphore(bus, Q, 0));
-	}
+	t(zero_semaphore(bus, Q, F(BUS_NOWAIT, IPC_NOWAIT)));
 	return bus->message;
 
 fail:
@@ -1087,7 +1077,7 @@ const char *bus_poll_timed(bus_t *bus, const struct timespec *timeout, clockid_t
 	int state = 0, saved_errno;
 	struct timespec delta;
 	if (!timeout)
-		return bus_poll(bus);
+		return bus_poll(bus, 0);
 
 	if (!bus->first_poll) {
 		t(release_semaphore(bus, W, SEM_UNDO));  state++;
@@ -1098,12 +1088,11 @@ const char *bus_poll_timed(bus_t *bus, const struct timespec *timeout, clockid_t
 #endif
 		t(release_semaphore(bus, S, SEM_UNDO));  state--;
 		t(acquire_semaphore(bus, W, SEM_UNDO));  state--;
+		t(release_semaphore(bus, Q, 0));
 	} else {
 		bus->first_poll = 0;
 	}
 	state--;
-	DELTA;
-	t(release_semaphore_timed(bus, Q, 0, &delta));
 	DELTA;
 	t(zero_semaphore_timed(bus, Q, 0, &delta));
 	return bus->message;

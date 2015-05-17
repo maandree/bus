@@ -1,0 +1,18 @@
+API usage example
+
+This example shows how to use timed operations.
+
+
+
+First of, run make to build this example.
+
+To start the example run ./init.
+When you are done run ./cleanup.
+
+Running instances of ./poll will wait for new messages
+continuously, but with one second timeouts.
+
+./poll, ./init and ./cleanup are run without any
+additional arguments. ./write is run with the message
+as the second argument.
+
