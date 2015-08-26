@@ -262,9 +262,9 @@ create_semaphores(bus_t *bus)
 
 	/* Initialise the array. */
 	values.array = calloc((size_t)BUS_SEMAPHORES, sizeof(unsigned short));
-	values.array[X] = 1;
 	if (!values.array)
 		goto fail;
+	values.array[X] = 1;
 	if (semctl(id, 0, SETALL, values.array) == -1)
 		goto fail;
 	free(values.array);
