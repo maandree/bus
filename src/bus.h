@@ -86,7 +86,7 @@ typedef struct bus
 	key_t key_sem;
 
 	/**
-	 * The key for the 
+	 * The key for the shared memory
 	 */
 	key_t key_shm;
 
