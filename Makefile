@@ -171,5 +171,4 @@ clean:
 	@echo cleaning
 	@-rm -rf obj bin
 
-.PHONY: all doc bus man man1 clean install install-bin install-so install-a install-h include-license install-doc install-man install-man1 install-man3 install-man5 install-man7 uninstall
-
+.PHONY: all doc bus man man1 man3 man5 man7 install install-doc install-man install-bin install-so install-a install-h include-license install-man1 install-man3 install-man5 install-man7 uninstall clean
