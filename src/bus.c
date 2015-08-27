@@ -1170,11 +1170,11 @@ bus_chmod(const char *file, mode_t mode)
 	struct shmid_ds shm_stat;
 	int shm_id;
 
-	mode = (mode & S_IRWXU) ? (mode | S_IRWXU) : (mode & ~S_IRWXU);
-	mode = (mode & S_IRWXG) ? (mode | S_IRWXG) : (mode & ~S_IRWXG);
-	mode = (mode & S_IRWXO) ? (mode | S_IRWXO) : (mode & ~S_IRWXO);
+	mode = (mode & S_IRWXU) ? (mode | S_IRWXU) : (mode & (mode_t)~S_IRWXU);
+	mode = (mode & S_IRWXG) ? (mode | S_IRWXG) : (mode & (mode_t)~S_IRWXG);
+	mode = (mode & S_IRWXO) ? (mode | S_IRWXO) : (mode & (mode_t)~S_IRWXO);
 	mode &= (S_IWUSR | S_IWGRP | S_IWOTH | S_IRUSR | S_IRGRP | S_IROTH);
-	fmode = mode & ~(S_IWGRP | S_IWOTH);
+	fmode = mode & (mode_t)~(S_IWGRP | S_IWOTH);
 
 	t(bus_open(&bus, file, -1));
 	t(chmod(file, fmode));
@@ -1182,13 +1182,13 @@ bus_chmod(const char *file, mode_t mode)
 	/* chmod sem */
 	t(open_semaphores(&bus));
 	t(semctl(bus.sem_id, 0, IPC_STAT, &sem_stat));
-	sem_stat.sem_perm.mode = mode;
+	sem_stat.sem_perm.mode = (unsigned short)mode;
 	t(semctl(bus.sem_id, 0, IPC_SET, &sem_stat));
 
 	/* chmod shm */
 	t(shm_id = shmget(bus.key_shm, (size_t)BUS_MEMORY_SIZE, 0));
 	t(shmctl(shm_id, IPC_STAT, &shm_stat));
-	shm_stat.shm_perm.mode = mode;
+	shm_stat.shm_perm.mode = (unsigned short)mode;
 	t(shmctl(shm_id, IPC_SET, &shm_stat));
 
 	return 0;

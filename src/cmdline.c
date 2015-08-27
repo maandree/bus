@@ -118,7 +118,7 @@ parse_mode(const char *str, mode_t *andnot, mode_t *or)
 	int numerical = 1;
 	mode_t mode = 0;
 	char op = '=';
-	int bits;
+	mode_t bits;
 
 	*andnot = 0;
 	*or = 0;
@@ -139,9 +139,9 @@ parse_mode(const char *str, mode_t *andnot, mode_t *or)
 		*andnot = U | G | O;
 		*or = mode;
 		*or &= U | G | O;
-		*or = (*or & U) ? (*or | U) : (*or & ~U);
-		*or = (*or & G) ? (*or | G) : (*or & ~G);
-		*or = (*or & O) ? (*or | O) : (*or & ~O);
+		*or = (*or & U) ? (*or | U) : (*or & (mode_t)~U);
+		*or = (*or & G) ? (*or | G) : (*or & (mode_t)~G);
+		*or = (*or & O) ? (*or | O) : (*or & (mode_t)~O);
 		return 0;
 	}
 
@@ -314,7 +314,7 @@ main(int argc, char *argv[])
 	mode_t mode_andnot, mode_or;
 	int opt_x = 0, opt_n = 0;
 	const char *arg;
-	char **nonoptv = alloca(argc * sizeof(char*));
+	char **nonoptv = alloca((size_t)argc * sizeof(char*));
 	int nonoptc = 0;
 
 	argv0 = *argv++;
