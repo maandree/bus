@@ -924,7 +924,7 @@ done:
  * @return             0 on success, -1 on error
  */
 int bus_read_timed(const bus_t *restrict bus, int (*callback)(const char *message, void *user_data),
-		   void *user_data, const struct timespec *timeout, clockid_t clockid)
+                   void *user_data, const struct timespec *timeout, clockid_t clockid)
 {
 	int r, state = 0, saved_errno;
 	struct timespec delta;
