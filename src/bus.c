@@ -540,7 +540,7 @@ absolute_time_to_delta_time(struct timespec *delta, const struct timespec *absol
  * @return            0 on success, -1 on error
  */
 int
-bus_create(const char *file, int flags, char **out_file)
+bus_create(const char *restrict file, int flags, char **restrict out_file)
 {
 	int fd = -1, saved_errno;
 	bus_t bus;
@@ -679,7 +679,7 @@ fail:
  * @return         0 on success, -1 on error
  */
 int
-bus_open(bus_t *bus, const char *file, int flags)
+bus_open(bus_t *restrict bus, const char *restrict file, int flags)
 {
 	int saved_errno;
 	char *line = NULL;
@@ -830,7 +830,6 @@ fail:
 	release_semaphore(bus, X, SEM_UNDO);
 	errno = saved_errno;
 	return -1;
-
 }
 
 
@@ -858,7 +857,7 @@ fail:
  * @return             0 on success, -1 on error
  */
 int
-bus_read(const bus_t *bus, int (*callback)(const char *message, void *user_data), void *user_data)
+bus_read(const bus_t *restrict bus, int (*callback)(const char *message, void *user_data), void *user_data)
 {
 	int r, state = 0, saved_errno;
 	if (release_semaphore(bus, S, SEM_UNDO) == -1)
@@ -924,7 +923,7 @@ done:
  *                     it most be a predictable clock
  * @return             0 on success, -1 on error
  */
-int bus_read_timed(const bus_t *bus, int (*callback)(const char *message, void *user_data),
+int bus_read_timed(const bus_t *restrict bus, int (*callback)(const char *message, void *user_data),
 		   void *user_data, const struct timespec *timeout, clockid_t clockid)
 {
 	int r, state = 0, saved_errno;

@@ -33,6 +33,14 @@
 
 
 
+#if defined(__GNUC__)
+# define BUS_COMPILER_GCC(X)  X
+#else
+# define BUS_COMPILER_GCC(X)  /* ignore */
+#endif
+
+
+
 /**
  * Open the bus for reading only
  */
@@ -122,7 +130,8 @@ typedef struct bus
  * @param   out_file  Output parameter for the pathname of the bus
  * @return            0 on success, -1 on error
  */
-int bus_create(const char *file, int flags, char **out_file);
+int bus_create(const char *restrict, int, char **restrict)
+	BUS_COMPILER_GCC(__attribute__((warn_unused_result)));
 
 /**
  * Remove a bus
@@ -130,7 +139,8 @@ int bus_create(const char *file, int flags, char **out_file);
  * @param   file  The pathname of the bus
  * @return        0 on success, -1 on error
  */
-int bus_unlink(const char *file);
+int bus_unlink(const char *)
+	BUS_COMPILER_GCC(__attribute__((nonnull)));
 
 
 /**
@@ -142,7 +152,8 @@ int bus_unlink(const char *file);
  *                 the value must not be negative
  * @return         0 on success, -1 on error
  */
-int bus_open(bus_t *bus, const char *file, int flags);
+int bus_open(bus_t *restrict, const char *restrict, int)
+	BUS_COMPILER_GCC(__attribute__((nonnull, warn_unused_result)));
 
 /**
  * Close a bus
@@ -150,7 +161,8 @@ int bus_open(bus_t *bus, const char *file, int flags);
  * @param   bus  Bus information
  * @return       0 on success, -1 on error
  */
-int bus_close(bus_t *bus);
+int bus_close(bus_t *)
+	BUS_COMPILER_GCC(__attribute__((nonnull)));
 
 
 /**
@@ -164,7 +176,8 @@ int bus_close(bus_t *bus);
  *                   procedure
  * @return           0 on success, -1 on error
  */
-int bus_write(const bus_t *bus, const char *message, int flags);
+int bus_write(const bus_t *, const char *, int)
+	BUS_COMPILER_GCC(__attribute__((nonnull, warn_unused_result)));
 
 /**
  * Broadcast a message on a bus
@@ -178,65 +191,67 @@ int bus_write(const bus_t *bus, const char *message, int flags);
  *                   it most be a predictable clock
  * @return           0 on success, -1 on error
  */
-int bus_write_timed(const bus_t *bus, const char *message,
-		    const struct timespec *timeout, clockid_t clockid);
+int bus_write_timed(const bus_t *, const char *, const struct timespec *, clockid_t)
+	BUS_COMPILER_GCC(__attribute__((nonnull(1, 2), warn_unused_result)));
 
 
 /**
  * Listen (in a loop, forever) for new message on a bus
  * 
- * @param   bus        Bus information
- * @param   callback   Function to call when a message is received, the
- *                     input parameters will be the read message and
- *                     `user_data` from `bus_read`'s parameter with the
- *                     same name. The message must have been parsed or
- *                     copied when `callback` returns as it may be over
- *                     overridden after that time. `callback` should
- *                     return either of the the values:
- *                       *  0:  stop listening
- *                       *  1:  continue listening
- *                       * -1:  an error has occurred
- *                     However, the function [`bus_read`] will invoke
- *                     `callback` with `message` set to `NULL`one time
- *                     directly after it has started listening on the
- *                     bus. This is to the the program now it can safely
- *                     continue with any action that requires that the
- *                     programs is listening on the bus.
- * @param   user_data  Parameter passed to `callback`
- * @return             0 on success, -1 on error
+ * @param   bus                     Bus information
+ * @param   callback                Function to call when a message is received, the
+ *            (message, user_data)  input parameters will be the read message and
+ *                                  `user_data` from `bus_read`'s parameter with the
+ *                                  same name. The message must have been parsed or
+ *                                  copied when `callback` returns as it may be over
+ *                                  overridden after that time. `callback` should
+ *                                  return either of the the values:
+ *                                    *  0:  stop listening
+ *                                    *  1:  continue listening
+ *                                    * -1:  an error has occurred
+ *                                  However, the function [`bus_read`] will invoke
+ *                                  `callback` with `message` set to `NULL`one time
+ *                                  directly after it has started listening on the
+ *                                  bus. This is to the the program now it can safely
+ *                                  continue with any action that requires that the
+ *                                  programs is listening on the bus.
+ * @param   user_data               Parameter passed to `callback`
+ * @return                          0 on success, -1 on error
  */
-int bus_read(const bus_t *bus, int (*callback)(const char *message, void *user_data), void *user_data);
+int bus_read(const bus_t *restrict, int (*)(const char *, void *), void *)
+	BUS_COMPILER_GCC(__attribute__((nonnull(1, 2), warn_unused_result)));
 
 /**
  * Listen (in a loop, forever) for new message on a bus
  * 
- * @param   bus        Bus information
- * @param   callback   Function to call when a message is received, the
- *                     input parameters will be the read message and
- *                     `user_data` from `bus_read`'s parameter with the
- *                     same name. The message must have been parsed or
- *                     copied when `callback` returns as it may be over
- *                     overridden after that time. `callback` should
- *                     return either of the the values:
- *                       *  0:  stop listening
- *                       *  1:  continue listening
- *                       * -1:  an error has occurred
- *                     However, the function [`bus_read`] will invoke
- *                     `callback` with `message` set to `NULL`one time
- *                     directly after it has started listening on the
- *                     bus. This is to the the program now it can safely
- *                     continue with any action that requires that the
- *                     programs is listening on the bus.
- * @param   user_data  Parameter passed to `callback`
- * @param   timeout    The time the operation shall fail with errno set
- *                     to `EAGAIN` if not completed, note that the callback
- *                     function may or may not have been called
- * @param   clockid    The ID of the clock the `timeout` is measured with,
- *                     it most be a predictable clock
- * @return             0 on success, -1 on error
+ * @param   bus                     Bus information
+ * @param   callback                Function to call when a message is received, the
+ *            (message, user_data)  input parameters will be the read message and
+ *                                  `user_data` from `bus_read`'s parameter with the
+ *                                  same name. The message must have been parsed or
+ *                                  copied when `callback` returns as it may be over
+ *                                  overridden after that time. `callback` should
+ *                                  return either of the the values:
+ *                                    *  0:  stop listening
+ *                                    *  1:  continue listening
+ *                                    * -1:  an error has occurred
+ *                                  However, the function [`bus_read`] will invoke
+ *                                  `callback` with `message` set to `NULL`one time
+ *                                  directly after it has started listening on the
+ *                                  bus. This is to the the program now it can safely
+ *                                  continue with any action that requires that the
+ *                                  programs is listening on the bus.
+ * @param   user_data               Parameter passed to `callback`
+ * @param   timeout                 The time the operation shall fail with errno set
+ *                                  to `EAGAIN` if not completed, note that the callback
+ *                                  function may or may not have been called
+ * @param   clockid                 The ID of the clock the `timeout` is measured with,
+ *                                  it most be a predictable clock
+ * @return                          0 on success, -1 on error
  */
-int bus_read_timed(const bus_t *bus, int (*callback)(const char *message, void *user_data),
-		   void *user_data, const struct timespec *timeout, clockid_t clockid);
+int bus_read_timed(const bus_t *restrict, int (*)(const char *, void *),
+                   void *, const struct timespec *, clockid_t)
+	BUS_COMPILER_GCC(__attribute__((nonnull(1, 2), warn_unused_result)));
 
 
 /**
@@ -250,7 +265,8 @@ int bus_read_timed(const bus_t *bus, int (*callback)(const char *message, void *
  * @param   bus  Bus information
  * @return       0 on success, -1 on error
  */
-int bus_poll_start(bus_t *bus);
+int bus_poll_start(bus_t *)
+	BUS_COMPILER_GCC(__attribute__((nonnull, warn_unused_result)));
 
 /**
  * Announce that the thread has stopped listening on the bus.
@@ -260,7 +276,8 @@ int bus_poll_start(bus_t *bus);
  * @param   bus  Bus information
  * @return       0 on success, -1 on error
  */
-int bus_poll_stop(const bus_t *bus);
+int bus_poll_stop(const bus_t *)
+	BUS_COMPILER_GCC(__attribute__((nonnull, warn_unused_result)));
 
 /**
  * Wait for a message to be broadcasted on the bus.
@@ -275,7 +292,8 @@ int bus_poll_stop(const bus_t *bus);
  *                 `EAGAIN` if there isn't already a message available on the bus
  * @return         The received message, `NULL` on error
  */
-const char *bus_poll(bus_t *bus, int flags);
+const char *bus_poll(bus_t *, int)
+	BUS_COMPILER_GCC(__attribute__((nonnull, warn_unused_result)));
 
 /**
  * Wait for a message to be broadcasted on the bus.
@@ -292,7 +310,8 @@ const char *bus_poll(bus_t *bus, int flags);
  *                   it most be a predictable clock
  * @return           The received message, `NULL` on error
  */
-const char *bus_poll_timed(bus_t *bus, const struct timespec *timeout, clockid_t clockid);
+const char *bus_poll_timed(bus_t *, const struct timespec *, clockid_t)
+	BUS_COMPILER_GCC(__attribute__((nonnull(1), warn_unused_result)));
 
 
 /**
@@ -305,7 +324,8 @@ const char *bus_poll_timed(bus_t *bus, const struct timespec *timeout, clockid_t
  * @param   group  The group ID of the bus's new group
  * @return         0 on success, -1 on error
  */
-int bus_chown(const char *file, uid_t owner, gid_t group);
+int bus_chown(const char *, uid_t, gid_t)
+	BUS_COMPILER_GCC(__attribute__((nonnull, warn_unused_result)));
 
 /**
  * Change the permissions for a bus
@@ -318,7 +338,8 @@ int bus_chown(const char *file, uid_t owner, gid_t group);
  *                edit the bus's associated file
  * @return        0 on success, -1 on error
  */
-int bus_chmod(const char *file, mode_t mode);
+int bus_chmod(const char *, mode_t)
+	BUS_COMPILER_GCC(__attribute__((nonnull, warn_unused_result)));
 
 
 
