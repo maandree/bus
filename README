@@ -1,22 +1,42 @@
-A simple daemonless system for broadcasting messages locally.
-bus is a light-weight alternative to a two-phase flexible barrier.
+NAME
+	bus - A simple daemonless system for broadcasting messages locally
 
-bus uses a System V semaphore array and System V shared memory.
-Buses are named; the key of the semaphore array and the
-shared memory is stored in a regular file.
+DESCRIPTION
+	bus is a simple daemonless system for broadcasting messages locally.
+	It is a lightweight alternative to a two-phase interprocess flexible
+	barrier.
 
-The shared memory used by bus is always 2048 bytes. Additionally
-all messages should be encoded in UTF-8 and not contain any NULL
-characters, except they MUST always end with a zero byte.
-Furthermore messages should be prefixed with the process
-identifer of the process whence the message originated, followed
-by a space. If the process is ephemeral, 0 should be used instead
-of the process identifier.
+	bus uses a System V semaphore array and System V shared memory.
+	Buses are named; the key of the semaphore array and the shared
+	memory is stored in a regular file.
 
-Communication over bus is synchronous. The broadcast call does
-not return until all listeners have received (and copyied)
-the message. A malfunctioning program can lock to bus.
+	The shared memory used by bus is always 2048 bytes. Additionally
+	all messages should be encoded in UTF-8 and not contain any NULL
+	characters, except they MUST always end with a zero byte.
+	Furthermore messages should be prefixed with the process
+	identifer of the process whence the message originated, followed
+	by a space. If the process is ephemeral, 0 should be used instead
+	of the process identifier.
 
-The software package contains a C library and a command line
-utility. The package python-bus provides a Python 3 module.
+	Communication over bus is synchronous. The broadcast call does
+	not return until all listeners have received (and copied) the
+	message. A malfunctioning program can lock the bus.
+
+	This software package contains a C library and a command line
+	utility. The package python-bus provides a Python 3 module.
+
+RATIONALE
+	We need an interprocess communication system similar to message
+	queues. But we need broadcasting rather than anycasting, so we
+	have a fast, simple and daemonless system for announcing events
+	to any processes that might be interested.
+
+SEE ALSO
+	libshr(7), cmdipc(1), msgctl(3), semctl(3), shmctl(3), mqueue.h(0),
+	semaphore.h(0), sem_overview(7), mmap(3), pipe(3), socketpair(3),
+	socket(3), unix(7), cmsg(3), kill(3), eventfd(2),  memfd_create(2),
+	pthread_mutex_destroy(3), pthread_rwlock_destroy(3), futux(7),
+	pthread_spin_destroy(3), pthread_cond_destroy(3), lockf(3), flock(2),
+	fcntl(3), ioctl(3), mkfifo(3), rendezvous(2), 9p(2), libdoor(3),
+	python-bus
 
