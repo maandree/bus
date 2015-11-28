@@ -40,22 +40,22 @@ man3: $(foreach M,${MAN3},bin/${M}.3)
 man5: $(foreach M,${MAN5},bin/${M}.5)
 man7: $(foreach M,${MAN7},bin/${M}.7)
 
-bin/%.1: doc/%.1
+bin/%.1: doc/man/%.1
 	@echo SED $@
 	@mkdir -p bin
 	@sed 's/%VERSION%/${VERSION}/g' < $< > $@
 
-bin/%.3: doc/%.3
+bin/%.3: doc/man/%.3
 	@echo SED $@
 	@mkdir -p bin
 	@sed 's/%VERSION%/${VERSION}/g' < $< > $@
 
-bin/%.5: doc/%.5
+bin/%.5: doc/man/%.5
 	@echo SED $@
 	@mkdir -p bin
 	@sed 's/%VERSION%/${VERSION}/g' < $< > $@
 
-bin/%.7: doc/%.7
+bin/%.7: doc/man/%.7
 	@echo SED $@
 	@mkdir -p bin
 	@sed 's/%VERSION%/${VERSION}/g' < $< > $@
