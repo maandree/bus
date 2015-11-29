@@ -131,7 +131,7 @@ typedef struct bus
  * @return            0 on success, -1 on error
  */
 int bus_create(const char *restrict, int, char **restrict)
-	BUS_COMPILER_GCC(__attribute__((warn_unused_result)));
+	BUS_COMPILER_GCC(__attribute__((__warn_unused_result__)));
 
 /**
  * Remove a bus
@@ -140,7 +140,7 @@ int bus_create(const char *restrict, int, char **restrict)
  * @return        0 on success, -1 on error
  */
 int bus_unlink(const char *)
-	BUS_COMPILER_GCC(__attribute__((nonnull)));
+	BUS_COMPILER_GCC(__attribute__((__nonnull__)));
 
 
 /**
@@ -153,7 +153,7 @@ int bus_unlink(const char *)
  * @return         0 on success, -1 on error
  */
 int bus_open(bus_t *restrict, const char *restrict, int)
-	BUS_COMPILER_GCC(__attribute__((nonnull, warn_unused_result)));
+	BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)));
 
 /**
  * Close a bus
@@ -162,7 +162,7 @@ int bus_open(bus_t *restrict, const char *restrict, int)
  * @return       0 on success, -1 on error
  */
 int bus_close(bus_t *)
-	BUS_COMPILER_GCC(__attribute__((nonnull)));
+	BUS_COMPILER_GCC(__attribute__((__nonnull__)));
 
 
 /**
@@ -177,7 +177,7 @@ int bus_close(bus_t *)
  * @return           0 on success, -1 on error
  */
 int bus_write(const bus_t *, const char *, int)
-	BUS_COMPILER_GCC(__attribute__((nonnull, warn_unused_result)));
+	BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)));
 
 /**
  * Broadcast a message on a bus
@@ -192,7 +192,7 @@ int bus_write(const bus_t *, const char *, int)
  * @return           0 on success, -1 on error
  */
 int bus_write_timed(const bus_t *, const char *, const struct timespec *, clockid_t)
-	BUS_COMPILER_GCC(__attribute__((nonnull(1, 2), warn_unused_result)));
+	BUS_COMPILER_GCC(__attribute__((__nonnull__(1, 2), __warn_unused_result__)));
 
 
 /**
@@ -219,7 +219,7 @@ int bus_write_timed(const bus_t *, const char *, const struct timespec *, clocki
  * @return                          0 on success, -1 on error
  */
 int bus_read(const bus_t *restrict, int (*)(const char *, void *), void *)
-	BUS_COMPILER_GCC(__attribute__((nonnull(1, 2), warn_unused_result)));
+	BUS_COMPILER_GCC(__attribute__((__nonnull__(1, 2), __warn_unused_result__)));
 
 /**
  * Listen (in a loop, forever) for new message on a bus
@@ -251,7 +251,7 @@ int bus_read(const bus_t *restrict, int (*)(const char *, void *), void *)
  */
 int bus_read_timed(const bus_t *restrict, int (*)(const char *, void *),
                    void *, const struct timespec *, clockid_t)
-	BUS_COMPILER_GCC(__attribute__((nonnull(1, 2), warn_unused_result)));
+	BUS_COMPILER_GCC(__attribute__((__nonnull__(1, 2), __warn_unused_result__)));
 
 
 /**
@@ -266,7 +266,7 @@ int bus_read_timed(const bus_t *restrict, int (*)(const char *, void *),
  * @return       0 on success, -1 on error
  */
 int bus_poll_start(bus_t *)
-	BUS_COMPILER_GCC(__attribute__((nonnull, warn_unused_result)));
+	BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)));
 
 /**
  * Announce that the thread has stopped listening on the bus.
@@ -277,7 +277,7 @@ int bus_poll_start(bus_t *)
  * @return       0 on success, -1 on error
  */
 int bus_poll_stop(const bus_t *)
-	BUS_COMPILER_GCC(__attribute__((nonnull, warn_unused_result)));
+	BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)));
 
 /**
  * Wait for a message to be broadcasted on the bus.
@@ -293,7 +293,7 @@ int bus_poll_stop(const bus_t *)
  * @return         The received message, `NULL` on error
  */
 const char *bus_poll(bus_t *, int)
-	BUS_COMPILER_GCC(__attribute__((nonnull, warn_unused_result)));
+	BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)));
 
 /**
  * Wait for a message to be broadcasted on the bus.
@@ -311,7 +311,7 @@ const char *bus_poll(bus_t *, int)
  * @return           The received message, `NULL` on error
  */
 const char *bus_poll_timed(bus_t *, const struct timespec *, clockid_t)
-	BUS_COMPILER_GCC(__attribute__((nonnull(1), warn_unused_result)));
+	BUS_COMPILER_GCC(__attribute__((__nonnull__(1), __warn_unused_result__)));
 
 
 /**
@@ -325,7 +325,7 @@ const char *bus_poll_timed(bus_t *, const struct timespec *, clockid_t)
  * @return         0 on success, -1 on error
  */
 int bus_chown(const char *, uid_t, gid_t)
-	BUS_COMPILER_GCC(__attribute__((nonnull, warn_unused_result)));
+	BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)));
 
 /**
  * Change the permissions for a bus
@@ -339,7 +339,7 @@ int bus_chown(const char *, uid_t, gid_t)
  * @return        0 on success, -1 on error
  */
 int bus_chmod(const char *, mode_t)
-	BUS_COMPILER_GCC(__attribute__((nonnull, warn_unused_result)));
+	BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)));
 
 
 
