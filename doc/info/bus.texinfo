@@ -65,8 +65,6 @@ Texts. A copy of the license is included in the section entitled
 @end macro
 @end ifnottex
 
-
-
 @menu
 * Overview::                        Brief overview of @command{bus}.
 * Standard::                        How to use @command{bus} properly.
@@ -76,8 +74,31 @@ Texts. A copy of the license is included in the section entitled
 * Rationale::                       Why @command{bus}?
 * Examples::                        Usecase examples and API-demonstration.
 * GNU Free Documentation License::  Copying and sharing this manual.
+
+@detailmenu
+ --- The Detailed Node Listing ---
+
+Invoking
+
+* bus create::                      Create a bus.
+* bus remove::                      Remove a bus.
+* bus listen::                      Listen for new message on a bus.
+* bus wait::                        Listen for one new message only on a bus.
+* bus broadcast::                   Broadcast a message on a bus.
+* bus chmod::                       Change permissions on a bus.
+* bus chown::                       Change ownership of a bus.
+* bus chgrp::                       Change group ownership of a bus.
+
+Examples
+
+* Audio-volume control::
+* Telephony and music::
+* Timed::
+* Nonblocking::
+* Daemon-dependencies::
+
+@end detailmenu
 @end menu
-@c TODO @detailmenu (`C-c C-u m`)
 
 
 
