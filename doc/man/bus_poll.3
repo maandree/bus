@@ -14,7 +14,7 @@ const char *bus_poll_timed(bus_t *\fIbus\fP, const struct timespec *\fItimeout\f
 .SH DESCRIPTION
 The
 .BR bus_poll ()
-function waits for a message to broadcasted on the \fIbus\fP, and return
+function waits for a message to be broadcasted on the \fIbus\fP, and return
 the message it receives.  The function fails if (\fIflags\fP &BUS_NOWAIT)
 and there is not already a message waiting on the bus.  Received messages
 shall be copied and parsed, and acted upon, in a separate thread, and
