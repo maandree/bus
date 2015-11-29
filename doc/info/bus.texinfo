@@ -904,8 +904,6 @@ int main()
 #include <stdlib.h>
 #include <string.h>
 
-#define t(stmt)  if (stmt) goto fail
-
 static size_t pauser_count = 0;
 static size_t pausers_size = 0;
 static char* pausers = NULL;
@@ -1119,7 +1117,7 @@ int main()
   t (bus_open(&bus, "/tmp/example-bus", BUS_RDONLY));
   t (bus_poll_start(&bus));
   for (;;) @{
-    t(clock_gettime(CLOCK_MONOTONIC, &timeout));
+    t (clock_gettime(CLOCK_MONOTONIC, &timeout));
     timeout.tv_sec += 1;
     message = bus_poll_timed(&bus, &timeout, CLOCK_MONOTONIC);
     if (message == NULL) @{
@@ -1419,7 +1417,636 @@ fail:
 @node Daemon-dependencies
 @section Daemon-dependencies
 
-TODO
+This example shows how bus can be used in an init system
+to provide ``aggressivly'' parallel startup of daemons.
+
+First of, run make to build this example.
+
+To start the example run @command{./init}. It will print in
+red export-statement you may want to run i other terminals.
+You will need to select at least one daemon, for example
+you can run @code{./init d-ntp}. The available pretend
+daemons are: @command{d-network}, @command{d-ntp}, and
+@command{d-ssh}.
+
+When you are done run @command{./cleanup} with @env{BUS_INIT}
+exported with the value printed by @command{./init}.
+
+
+@subsubheading @file{./Makefile}
+@example
+COMMANDS = announce await-ready await-started cleanup  \
+           init require start-daemon test-daemon
+
+all: $@{COMMANDS@}
+%: %.c
+        $@{CC@} -Wall -Wextra -pedantic -std=c99 -lbus -o $@@ $<
+clean:
+        -rm $@{COMMANDS@}
+        -rm -r run
+
+.PHONY: all clean
+@end example
+
+
+@subsubheading @file{./announce.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <unistd.h>
+
+#define t(stmt)  if (stmt) goto fail
+
+static char arg[4098];
+
+int main(int argc, char *argv[])
+@{
+  bus_t bus;
+  if (argc < 3)
+    return fprintf(stderr, "USAGE: %s state daemon", *argv), 2;
+  t (bus_open(&bus, getenv("BUS_INIT"), BUS_WRONLY));
+  sprintf(arg, "%ji %s %s", (intmax_t)getppid(), argv[1], argv[2]);
+  t (bus_write(&bus, arg, 0));
+  t (bus_close(&bus));
+  return 0;
+
+fail:
+  perror("announce");
+  return 1;
+@}
+@end example
+
+
+@subsubheading @file{./await-ready.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/wait.h>
+
+#define t(stmt)  if (stmt) goto fail
+
+static char arg[4098];
+static int argc;
+static char **argv;
+static int remaining = 0;
+static char *started = NULL;
+static char msg[BUS_MEMORY_SIZE];
+
+static void announce_wait(pid_t pid)
+@{
+  bus_t bus;
+  int i;
+  t (bus_open(&bus, getenv("BUS_INIT"), BUS_WRONLY));
+  for (i = 1; i < argc; i++) @{
+    if (!started[i]) @{
+      sprintf(arg, "%ji awaiting-ready %s", (intmax_t)pid, argv[i]);
+      t (bus_write(&bus, arg, 0));
+    @}
+  @}
+  t (bus_close(&bus));
+  return;
+
+fail:
+  perror("await-ready");
+@}
+
+static int callback(const char *message, void *user_data)
+@{
+  int i;
+  char *arg2;
+  char *arg3;
+  pid_t pid;
+  pid_t ppid;
+
+  if (!message) @{
+    ppid = getppid();
+    pid = fork();
+    if (pid == 0) @{
+      if (fork() == 0)
+        announce_wait(ppid);
+      exit(0);
+    @} else @{
+      (void) waitpid(pid, NULL, 0);
+      /* @w{@xrm{}Let's pretend everything will go swimmingly.@xtt{}} */
+    @}
+    return 1;
+  @}
+
+  strncpy(msg, message, BUS_MEMORY_SIZE - 1);
+  msg[BUS_MEMORY_SIZE - 1] = 0;
+
+  arg2 = strchr(msg, ' ');
+  if (!arg2)
+    return 1;
+  arg3 = strchr(++arg2, ' ');
+  if (!arg3)
+    return 1;
+  *arg3++ = 0;
+
+  if (strcmp(arg2, "ready"))
+    return 1;
+
+  for (i = 1; i < argc; i++)
+    if (!started[i] && !strcmp(argv[i], arg3))
+      started[i] = 1, remaining--;
+
+  return !!remaining;
+  (void) user_data;
+@}
+
+int main(int argc_, char *argv_[])
+@{
+  bus_t bus;
+  int i;
+
+  argc = argc_;
+  argv = argv_;
+
+  if (argc < 2)
+    return fprintf(stderr, "USAGE: %s daemon...", *argv), 2;
+  t (bus_open(&bus, getenv("BUS_INIT"), BUS_RDONLY));
+  started = calloc(argc, sizeof(char));
+  t (started == NULL);
+
+  started[0] = 1;
+  for (i = 1; i < argc; i++) @{
+    sprintf(arg, "grep '^%s$'"
+                 " <\"$@{XDG_RUNTIME_DIR@}/ready-daemons\""
+                 " >/dev/null",
+            argv[i]);
+    if (!WEXITSTATUS(system(arg)))
+      started[i] = 1;
+    else
+      remaining++;
+  @}
+
+  if (remaining)
+    bus_read(&bus, callback, NULL);
+
+  bus_close(&bus);
+  free(started);
+  return 0;
+
+fail:
+  perror("await-ready");
+  bus_close(&bus);
+  free(started);
+  return 1;
+@}
+@end example
+
+
+@subsubheading @file{./await-started.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/wait.h>
+
+#define t(stmt)  if (stmt) goto fail
+
+static char arg[4098];
+static int argc;
+static char **argv;
+static int remaining = 0;
+static char *started = NULL;
+static char msg[BUS_MEMORY_SIZE];
+
+static void announce_wait(pid_t pid)
+@{
+  bus_t bus;
+  int i;
+  t (bus_open(&bus, getenv("BUS_INIT"), BUS_WRONLY));
+  for (i = 1; i < argc; i++) @{
+    if (!started[i]) @{
+      sprintf(arg, "%ji awaiting-started %s", (intmax_t)pid, argv[i]);
+      t (bus_write(&bus, arg, 0));
+    @}
+  @}
+  t (bus_close(&bus));
+  return;
+
+fail:
+  perror("await-started");
+@}
+
+static int callback(const char *message, void *user_data)
+@{
+  int i;
+  char *arg2;
+  char *arg3;
+  pid_t pid;
+  pid_t ppid;
+
+  if (!message) @{
+    ppid = getppid();
+    pid = fork();
+    if (pid == 0) @{
+      if (fork() == 0)
+        announce_wait(ppid);
+      exit(0);
+    @} else @{
+      (void) waitpid(pid, NULL, 0);
+      /* @w{@xrm{}Let's pretend everything will go swimmingly.@xtt{}} */
+    @}
+    return 1;
+  @}
+
+  strncpy(msg, message, BUS_MEMORY_SIZE - 1);
+  msg[BUS_MEMORY_SIZE - 1] = 0;
+
+  arg2 = strchr(msg, ' ');
+  if (!arg2)
+    return 1;
+  arg3 = strchr(++arg2, ' ');
+  if (!arg3)
+    return 1;
+  *arg3++ = 0;
+
+  if (strcmp(arg2, "started") && strcmp(arg2, "ready"))
+    return 1;
+
+  for (i = 1; i < argc; i++)
+    if (!started[i] && !strcmp(argv[i], arg3))
+      started[i] = 1, remaining--;
+
+  return !!remaining;
+  (void) user_data;
+@}
+
+int main(int argc_, char *argv_[])
+@{
+  bus_t bus;
+  int i;
+
+  argc = argc_;
+  argv = argv_;
+
+  if (argc < 2)
+    return fprintf(stderr, "USAGE: %s daemon...", *argv), 2;
+  t (bus_open(&bus, getenv("BUS_INIT"), BUS_RDONLY));
+  started = calloc(argc, sizeof(char));
+  t (started == NULL);
+
+  started[0] = 1;
+  for (i = 1; i < argc; i++) @{
+    sprintf(arg, "grep '^%s$'"
+                 " <\"$@{XDG_RUNTIME_DIR@}/started-daemons\""
+                 " >/dev/null",
+            argv[i]);
+    if (!WEXITSTATUS(system(arg))) @{
+      started[i] = 1;
+    @} else @{
+      sprintf(arg, "grep '^%s$'"
+                   " <\"$@{XDG_RUNTIME_DIR@}/ready-daemons\""
+                   " >/dev/null",
+              argv[i]);
+      if (!WEXITSTATUS(system(arg)))
+        started[i] = 1;
+      else
+        remaining++;
+    @}
+  @}
+
+  if (remaining)
+    bus_read(&bus, callback, NULL);
+
+  bus_close(&bus);
+  free(started);
+  return 0;
+
+fail:
+  perror("await-started");
+  bus_close(&bus);
+  free(started);
+  return 1;
+@}
+@end example
+
+
+@subsubheading @file{./cleanup.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define t(stmt)  if (stmt) goto fail
+
+int main()
+@{
+  char *bus_address = getenv("BUS_INIT");
+  if (!bus_address || !*bus_address) @{
+    fprintf(stderr, "$BUS_INIT has not been set, its export statement "
+                    "should have been printed in bold red by ./init\n");
+    return 1;
+  @}
+  t (bus_unlink(bus_address));
+  return 0;
+
+fail:
+  perror("cleanup");
+  return 1;
+@}
+@end example
+
+
+@subsubheading @file{./d-network}
+@example
+#!/bin/sh
+PATH=.:$PATH
+d=d-network
+
+echo $d: starting
+sleep 2
+echo $d: ready
+announce ready $d
+@end example
+
+
+@subsubheading @file{./d-ntp}
+@example
+#!/bin/sh
+PATH=.:$PATH
+d=d-ntp
+
+require d-network
+echo $d: started
+announce started $d
+await-ready d-network
+echo $d: ready
+announce ready $d
+@end example
+
+
+@subsubheading @file{./d-ssh}
+@example
+#!/bin/sh
+PATH=.:$PATH
+d=d-ssh
+
+require d-network
+echo $d: starting
+sleep 1
+echo $d: started
+announce started $d
+sleep 1
+echo $d: ready
+announce ready $d
+@end example
+
+
+@subsubheading @file{./init.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+#define t(stmt)  if (stmt) goto fail
+#define _2(...)  __VA_ARGS__, __VA_ARGS__
+
+static char msg[BUS_MEMORY_SIZE];
+static int argc;
+static char **argv;
+static char arg[4098];
+
+static void start_daemons()
+@{
+  int i;
+  for (i = 1; i < argc; i++)
+    if (fork() == 0)
+      execl("./start-daemon", "./start-daemon", argv[i], NULL); 
+@}
+
+static int callback(const char *message, void *user_data)
+@{
+  pid_t pid;
+  char *arg2;
+  char *arg3;
+  if (!message) @{
+    pid = fork();
+    t (pid == -1);
+    if (pid == 0) @{
+      if (fork() == 0) @{
+        start_daemons();
+      @}
+      exit(0);
+    @} else @{
+      (void) waitpid(pid, NULL, 0);
+      /* @w{@xrm{}Let's pretend everything will go swimmingly.@xtt{}} */
+    @}
+    return 1;
+  @}
+
+  strncpy(msg, message, BUS_MEMORY_SIZE - 1);
+  msg[BUS_MEMORY_SIZE - 1] = 0;
+
+  pid = fork();
+  t (pid == -1);
+
+  if (pid == 0) @{
+    if (fork() == 0) @{
+      arg2 = strchr(msg, ' ');
+      if (arg2 == NULL)
+        exit(0);
+      arg3 = strchr(++arg2, ' ');
+      if (arg3 == NULL)
+        exit(0);
+      *arg3++ = 0;
+      if (!strcmp(arg2, "require")) @{
+        execl(_2("./start-daemon"), arg3, NULL);
+      @} else if (!strcmp(arg2, "awaiting-started")) @{
+        execl(_2("./test-daemon"), arg3, "started", NULL);
+      @} else if (!strcmp(arg2, "awaiting-ready") ||
+                  !strcmp(arg2, "awaiting")) @{
+        execl(_2("./test-daemon"), arg3, "ready", NULL);
+      @} else if (!strcmp(arg2, "started")) @{
+        sprintf(arg,
+          "grep '^%s\\$' < \"%s\" >/dev/null || echo %s >> \"%s\"",
+          _2(arg3, "$@{XDG_RUNTIME_DIR@}/started-daemons"));
+        execlp(_2("sh"), "-c", arg, NULL);
+      @} else if (!strcmp(arg2, "ready")) @{
+        sprintf(arg,
+          "grep '^%s\\$' < \"%s\" >/dev/null || echo %s >> \"%s\"",
+          _2(arg3, "$@{XDG_RUNTIME_DIR@}/ready-daemons"));
+        execlp(_2("sh"), "-c", arg, NULL);
+      @}
+    @}
+    exit(0);
+  @} else @{
+    (void) waitpid(pid, NULL, 0);
+    /* @w{@xrm{}Let's pretend everything will go swimmingly.@xtt{}} */
+  @}
+
+  return 1;
+  (void) user_data;
+
+fail:
+  perror("init");
+  return -1;
+@}
+
+int main(int argc_, char *argv_[])
+@{
+  char *bus_address = NULL;
+  bus_t bus;
+  argv = argv_;
+  argc = argc_;
+  if (argc < 2) @{
+    fprintf(stderr, "USAGE: %s daemon...\n", *argv);
+    return 1;
+  @}
+  t (setenv("XDG_RUNTIME_DIR", "./run", 1));
+  /* @w{@xrm{}Real init systems with not have the period.@xtt{}} */
+  system("mkdir -p -- \"$@{XDG_RUNTIME_DIR@}\"");
+  system("truncate -s 0 -- \"$@{XDG_RUNTIME_DIR@}/started-daemons\"");
+  system("truncate -s 0 -- \"$@{XDG_RUNTIME_DIR@}/ready-daemons\"");
+  t (bus_create(NULL, 1, &bus_address));
+  fprintf(stderr, "\033[00;01;31mexport BUS_INIT=%s\033[00m\n",
+          bus_address);
+  fprintf(stderr, "\033[00;31mexport XDG_RUNTIME_DIR=./run\033[00m\n");
+  t (setenv("BUS_INIT", bus_address, 1));
+  t (bus_open(&bus, bus_address, BUS_RDONLY));
+  t (bus_read(&bus, callback, NULL));
+  bus_close(&bus);
+  free(bus_address);
+  return 0;
+
+fail:
+  perror("init");
+  bus_close(&bus);
+  free(bus_address);
+  return 1;
+@}
+@end example
+
+
+@subsubheading @file{./require.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <unistd.h>
+
+#define t(stmt)  if (stmt) goto fail
+
+static char arg[4098];
+
+int main(int argc, char *argv[])
+@{
+  bus_t bus;
+  int i;
+  if (argc < 2)
+    return fprintf(stderr, "USAGE: %s daemon...", *argv), 2;
+  t (bus_open(&bus, getenv("BUS_INIT"), BUS_WRONLY));
+
+  for (i = 1; i < argc; i++) @{
+    sprintf(arg, "grep '^%s$' <\"%s\" >/dev/null",
+            argv[i], "$@{XDG_RUNTIME_DIR@}/started-daemons");
+    if (WEXITSTATUS(system(arg))) @{
+      sprintf(arg, "%ji require %s", (intmax_t)getppid(), argv[i]);
+      t (bus_write(&bus, arg, 0));
+    @}
+  @}
+
+  bus_close(&bus);
+  return 0;
+
+fail:
+  perror("require");
+  bus_close(&bus);
+  return 1;
+@}
+@end example
+
+
+@subsubheading @file{./start-daemon.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+static char arg[4098];
+
+int main(int argc, char *argv[])
+@{
+  if (argc != 2) @{
+    fprintf(stderr, "This program should be called from ./init\n");
+    return 2;
+  @}
+
+  sprintf(arg, "grep '^%s$' <\"%s\" >/dev/null",
+          argv[1], "$@{XDG_RUNTIME_DIR@}/started-daemons");
+  if (!WEXITSTATUS(system(arg)))
+    return 0;
+  sprintf(arg, "grep '^%s$' <\"%s\" >/dev/null",
+          argv[1], "$@{XDG_RUNTIME_DIR@}/ready-daemons");
+  if (!WEXITSTATUS(system(arg)))
+    return 0;
+
+  sprintf(arg, "./%s", argv[1]);
+  execlp(arg, arg, NULL);
+  perror("start-daemon");
+  return 1;
+@}
+@end example
+
+
+@subsubheading @file{./test-daemon.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define t(stmt)  if (stmt) goto fail
+
+static char arg[4098];
+
+int main(int argc, char *argv[])
+@{
+  bus_t bus;
+  if (argc != 3) @{
+    fprintf(stderr, "This program should be called from ./init\n");
+    return 2;
+  @}
+
+retry:
+  sprintf(arg, "grep '^%s$'"
+               " <\"$@{XDG_RUNTIME_DIR@}/%s-daemons\""
+               " >/dev/null",
+          argv[1], argv[2]);
+  if (!WEXITSTATUS(system(arg))) @{
+    t (bus_open(&bus, getenv("BUS_INIT"), BUS_WRONLY));
+    sprintf(arg, "0 %s %s", argv[2], argv[1]);
+    t (bus_write(&bus, arg, 0));
+    bus_close(&bus);
+  @} else if (!strcmp(argv[2], "started")) @{
+    argv[2] = "ready";
+    goto retry;
+  @}
+  return 0;
+
+fail:
+  perror("test-daemon");
+  return 1;
+@}
+@end example
 
 
 
