@@ -40,3 +40,5 @@ SEE ALSO
 	fcntl(3), ioctl(3), mkfifo(3), rendezvous(2), 9p(2), libdoor(3),
 	python-bus
 
+	Full documentation available locally via: info '(bus)'
+

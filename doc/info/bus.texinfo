@@ -1,0 +1,428 @@
+\input texinfo   @c -*-texinfo-*-
+
+@c %**start of header
+@setfilename bus.info
+@settitle bus
+@afourpaper
+@documentencoding UTF-8
+@documentlanguage en
+@finalout
+@c %**end of header
+
+
+@dircategory Interprorcess Communication
+@direntry
+* bus: (bus).                        A simple daemonless system for broadcasting messages locally
+@end direntry
+
+
+@copying
+Copyright @copyright{} 2015 Mattias Andrée
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, with no Front-Cover Texts, and with no Back-Cover
+Texts. A copy of the license is included in the section entitled
+``GNU Free Documentation License''.
+@end quotation
+@end copying
+
+@ifnottex
+@node Top
+@top bus -- A simple daemonless system for broadcasting messages locally
+@insertcopying
+@end ifnottex
+
+@titlepage
+@title bus
+@subtitle A simple daemonless system for broadcasting messages locally
+@author by Mattias Andrée (maandree)
+
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@page
+@end titlepage
+
+@contents
+
+
+@iftex
+@macro xrm{}
+@rm{}
+@end macro
+@macro xtt{}
+@tt{}
+@end macro
+@end iftex
+
+@ifnottex
+@macro xrm{}
+@end macro
+@macro xtt{}
+@end macro
+@end ifnottex
+
+
+
+@menu
+* Overview::                        Brief overview of @command{bus}.
+* Standard::                        How to use @command{bus} properly.
+* Invoking::                        Executing @command{bus}.
+* Protocol::                        How communication over @command{bus} works internally.
+* Rationale::                       Why @command{bus}?
+* GNU Free Documentation License::  Copying and sharing this manual.
+@end menu
+@c TODO @detailmenu (`C-c C-u m`)
+
+
+
+@node Overview
+@chapter Overview
+
+@command{bus} is a stupid-simple, thrilless, daemonless interprocess
+communication system for broadcasting messages. It is a lightweight
+alternative to a two-phase interprocess flexible barrier.
+
+@command{bus} uses a System V semaphore array and System V shared
+memory. Buses are named; the key of the semaphore array and the
+shared memory is stored in a regular file.
+
+The shared memory used by @command{bus} is always 2048 bytes.
+Additionally all messages should be encoded in UTF-8 and not contain
+any NULL characters, except they @emph{must} always end with a NULL
+byte. Furthermore messages should be prefixed with the process
+identifer of the process whence the message originated, followed
+by a space. If the process is ephemeral@footnote{The process exits
+after the broadcast, or shortly thereafter.}, 0 should be used
+instead of the process identifier.
+
+Communication over @command{bus} is synchronous. The broadcast call
+does not return until all listeners have received (and copied) the
+message. A malfunctioning program can lock the bus.
+
+This software package contains a C library and a command line
+utility. The package python-bus provides a Python 3 module.
+
+
+
+@node Standard
+@chapter Standard
+
+The command @command{bus create} can be used to create new buses. By
+convention, buses should be stored in @file{$XDG_RUNTIME_DIR/bus},
+this is what @command{bus create} does if no pathname is given. The
+pathname of the bus should be tracked using @env{BUS_X}, where @env{X}
+is replaced with either:
+
+@table @env
+@item GENERIC
+For the bus used in generic cases. That is all but the cases
+of the buses listed below.
+@item AUDIO
+For the bus used in with the audio subsystem is involved.
+@item VIDEO
+For the bus used in with the video subsystem is involved.
+@item INPUT
+For the bus used in with the input subsystem is involved.
+@item FILES
+For the bus used in with the storage subsystem is involved.
+@end table
+
+This list may be extended in the future. Therefore, and for
+other conventions, project-private buses should be tracked
+using @env{X_BUS}, where @env{X} is the project name.
+
+Messages broadcasted on a bus cannot be longer than 2047 bytes,
+excluding NUL termination. Message should be encoded in UTF-8,
+and most not contain the NUL character.
+
+Broadcasted message should start with the process ID whence
+the message originated, followed by a single regular space.
+If the process is ephemeral@footnote{The process exits after
+the broadcast, or shortly thereafter.}, 0 should be used instead
+of the process identifier.
+
+
+
+@node Invoking
+@chapter Invoking
+
+@command{bus} includes the following commands:
+
+@table @command
+@item create
+Create a bus.
+See @ref{bus create} for more information.
+@item remove
+Remove a bus.
+See @ref{bus remove} for more information.
+@item listen
+Listen for new message on a bus.
+See @ref{bus listen} for more information.
+@item wait
+Listen for one new message only on a bus.
+See @ref{bus wait} for more information.
+@item broadcast
+Broadcast a message on a bus.
+See @ref{bus broadcast} for more information.
+@item chmod
+Change permissions on a bus.
+See @ref{bus chmod} for more information.
+@item chown
+Change ownership of a bus.
+See @ref{bus chown} for more information.
+@item chgrp
+Change group ownership of a bus.
+See @ref{bus chgrp} for more information.
+@end table
+
+Upon successful completion, these commands exit with the value
+0. On failure, they exit with the value 1. If the command is
+not recognised the exit value is 2.
+
+@menu
+* bus create::                      Create a bus.
+* bus remove::                      Remove a bus.
+* bus listen::                      Listen for new message on a bus.
+* bus wait::                        Listen for one new message only on a bus.
+* bus broadcast::                   Broadcast a message on a bus.
+* bus chmod::                       Change permissions on a bus.
+* bus chown::                       Change ownership of a bus.
+* bus chgrp::                       Change group ownership of a bus.
+@end menu
+
+
+
+@node bus create
+@section @command{bus create}
+
+The syntax for invocation of @command{bus create} is
+@example
+bus create [-x] [--] [@var{PATHNAME}]
+@end example
+
+The command creates a bus and stores the key to it in the
+file @var{PATHNAME}. If @var{PATHNAME} is omitted, a
+random pathname in @file{$XDG_RUNTIME_DIR/bus} will be
+used and printed to stdout.
+
+If @option{-x} is used, the command will fail if
+the file @var{PATHNAME} already exists.
+
+
+
+
+@node bus remove
+@section @command{bus remove}
+
+The syntax for invocation of @command{bus remove} is
+@example
+bus remove [--] @var{PATHNAME}
+@end example
+
+The command removes the bus whose key is stored in
+the file @var{PATHNAME}.  The file holding the
+key is also unlinked.
+
+
+
+@node bus listen
+@section @command{bus listen}
+
+The syntax for invocation of @command{bus command} is
+@example
+bus listen [--] @var{PATHNAME} @var{COMMAND}
+@end example
+
+The command listens for new messages on the bus whose
+key is stored in the file @var{PATHNAME}. Once a message
+is received, @var{COMMAND} will be spawned with the
+environment variable @env{msg} (lowercased) set to the
+received message. @sc{POSIX} shell syntax applies to
+@var{COMMAND}.
+
+
+@node bus wait
+@section @command{bus wait}
+
+The syntax for invocation of @command{bus wait} is
+@example
+bus wait [--] @var{PATHNAME} @var{COMMAND}
+@end example
+
+The command listens for a new message on the bus whose
+key is stored in the file @var{PATHNAME}. Once a message
+is received, the process will stop listening for more
+messages and @var{COMMAND} will be spawned with the
+environment variable @env{msg} (lowercased) set to the
+received message. @sc{POSIX} shell syntax applies to
+@var{COMMAND}.
+
+
+
+@node bus broadcast
+@section @command{bus broadcast}
+
+The syntax for invocation of @command{bus broadcast} is
+@example
+bus broadcast [-n] [--] @var{PATHNAME} @var{MESSAGE}
+@end example
+
+The command broadcasts the message @var{MESSAGE} on the
+bus whose key is stored in the file @var{PATHNAME}.
+
+
+
+@node bus chmod
+@section @command{bus chmod}
+
+The syntax for invocation of @command{bus chmod} is
+@example
+bus chmod [--] @var{PERMISSIONS} @var{PATHNAME}
+@end example
+
+This command changes who have access to the bus whose key
+is stored in the file @var{PATHNAME}. In the permissions,
+the owner, the group, and others (not in tgroup) are
+represented by the symbols @code{u}@footnote{@code{u}
+stands for `user'.}, @code{g}, and @code{o}, respectively.
+The permissions string is imagined to have always be
+prefixed with an @code{=}. This symbols means that all user
+classes list after it, and only those classes, as permission
+to use the bus. Similarly the symbols @code{+} and @code{-}
+can be used to grant and revoke access, respectively. The
+symbols @code{=}, @code{+}, and @code{-} can be mixed, and
+are interpreted from left to right. Alternatively the
+permissions string can be a octal number, where the  owner
+is represented by any bit in 700 (100, 200, or 400, or any
+combination thereof), the group is represented by any bit
+in 70, and others (not in the group) is represented by any
+bit in 7.
+
+The current permission of the bus can be retrieved by
+running @command{stat} over the file @var{PATHNAME}.
+
+
+
+@node bus chown
+@section @command{bus chown}
+
+The syntax for invocation of @command{bus chown} is
+@example
+bus chown [--] @var{OWNER}[:@var{GROUP}] @var{PATHNAME}
+@end example
+
+This command changes the owner, that owns the bus whose
+key is stored in the file @var{PATHNAME}, to the specified
+owner. The owner can be specified either with a numerical
+user identifier or with a user name. If a group is
+specified, the bus's owner-group will be set to that group,
+otherwise the group will remain unchanged (not changed
+to the group of the new owner.) The group can be specified
+either with a numerical group identifier or with a group
+name.
+
+The current ownership of the bus can be retrieved by
+running @command{stat} over the file @var{PATHNAME}.
+
+
+
+@node bus chgrp
+@section @command{bus chgrp}
+
+The syntax for invocation of @command{bus chgrp} is
+@example
+bus chgrp [--] @var{GROUP} @var{PATHNAME}
+@end example
+
+This command changes the group, that owns the bus whose
+key is stored in the file @var{PATHNAME}, to the specified
+group. The group can be specified either with a numerical
+group identifier or with a group name.
+
+The current ownership of the bus can be retrieved by
+running @command{stat} over the file @var{PATHNAME}.
+
+
+
+@node Protocol
+@chapter Protocol
+
+@command{bus} is built upon following three procedures.
+
+@noindent
+@code{create}
+@example
+@w{@xrm{}Select a filename.@xtt{}}
+
+@w{@xrm{}Create XSI semaphore array @{@code{S} = 0, @code{W} = 0, @code{X} = 1, @code{Q} = 0, @code{N} = 0@}@xtt{}}
+@w{@xrm{}with random key. Store the semaphore array's key in decimal form@xtt{}}
+@w{@xrm{}on the first line in the selected file.@xtt{}}
+
+@w{@xrm{}Create XSI shared memory, with an allocation of 2048 bytes, with@xtt{}}
+@w{@xrm{}a random key. Store the shared memory's key in decimal form on@xtt{}}
+@w{@xrm{}the second line in the selected file.@xtt{}}
+@end example
+
+@noindent
+@code{broadcast}
+@example
+with P(X):
+  Z(W)
+  @w{@xrm{}Write NUL-terminate message to shared memory@xtt{}}
+  with V(N): -- (1)
+    Q := 0
+    Z(S)
+
+-- (1) @w{@xrm{}may be omitted if semaphores are known that@xtt{}}
+   @w{P()@xrm{}, @xtt{}Z()@xrm{}, @xtt{}V()@xrm{} cannot create a race condition@xtt{}}
+   @w{@xrm{}with a processes running @xtt{}Z()@xrm{}.@xtt{}}
+@end example
+
+@noindent
+@code{listen}
+@example
+with V(S):
+  forever:
+    V(Q)
+    Z(Q)
+    @w{@xrm{}Read NUL-terminated message from shared memory@xtt{}}
+    if breaking:
+      break
+    with V(W):
+      with P(S):
+        Z(S)
+        Z(N)
+@end example
+
+@noindent
+@code{V(a)} means that semaphore a is released.@*
+@code{P(a)} means that semaphore a is acquired.@*
+@code{Z(a)} means that the process waits for semaphore a to become 0.@*
+@code{with P(a)} that @code{P(a)} is done before the entering the scope,
+and @code{V(a)} is done when exiting the scope. It also means that
+these actions [@code{P(a)} and @code{V(a)}] are undone when the process
+exits, or if the call fails.@*
+@code{with V(a)} is to @code{V(a)} as @code{with P(a)} is to @code{P(a)}.
+
+
+
+@node Rationale
+@chapter Rationale
+
+We need an interprocess communication system similar to message queues.
+But we need broadcasting rather than anycasting, so we have a fast,
+simple and daemonless system for announcing events to any processes that
+might be interested.
+
+
+
+@node GNU Free Documentation License
+@appendix GNU Free Documentation License
+@include fdl.texinfo
+
+@bye
+

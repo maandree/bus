@@ -7,7 +7,7 @@ bus chmod - Change permissions on a bus
 .IR permissions
 .IR pathname
 .SH DESCRIPTION
-Change whom as access to a bus with an associated \fIpathname\fP.
+Change who have access to a bus with an associated \fIpathname\fP.
 In the \fIpermissions\fP, the owner, the group, and others (not
 in group) are represented by the symbols \fBu\fP, \fBg\fP, and
 \fBo\fP, respectively.  The \fIpermissions\fP string is imagined
@@ -15,7 +15,7 @@ to have always be prefixed with an \fB=\fP.  This symbols means
 that all user classes list after it, and only those classes, as
 permission to use the bus.  Similarly the symbols \fB+\fP and
 \fB\-\fP can be used to grant and revoke access, respectively.
-The symbols \fB=\fP, \fB+\fP, and \fB\-\fP can be maked, and are
+The symbols \fB=\fP, \fB+\fP, and \fB\-\fP can be mixed, and are
 interpreted from left to right.  Alternatively the \fIpermissions\fP
 string can be a octal number, where the owner is represented by any
 bit in 700 (100, 200, or 400, or any combination thereof), the

@@ -12,6 +12,8 @@ DATA = /share
 DATADIR = ${PREFIX}${DATA}
 LICENSEDIR = ${DATADIR}/licenses
 MANDIR = ${DATADIR}/man
+INFODIR = $(DATADIR)/info
+DOCDIR = $(DATADIR)/doc
 
 PKGNAME = bus
 
@@ -27,18 +29,26 @@ FLAGS = -std=c99 -Wall -Wextra -pedantic -O2
 LIB_MAJOR = 3
 LIB_MINOR = 1
 LIB_VERSION = ${LIB_MAJOR}.${LIB_MINOR}
-VERSION = 3.1.4
+VERSION = 3.1.5
 
 
+default: bus man info
 all: bus doc
-doc: man
+doc: man info pdf dvi ps
 man: man1 man3 man5 man7
-
-bus: bin/bus bin/libbus.so.${LIB_VERSION} bin/libbus.so.${LIB_MAJOR} bin/libbus.so bin/libbus.a
+bus: bin lib
+bin: bin/bus
+lib: so a
+so: bin/libbus.so.${LIB_VERSION} bin/libbus.so.${LIB_MAJOR} bin/libbus.so
+a: bin/libbus.a
 man1: $(foreach M,${MAN1},bin/${M}.1)
 man3: $(foreach M,${MAN3},bin/${M}.3)
 man5: $(foreach M,${MAN5},bin/${M}.5)
 man7: $(foreach M,${MAN7},bin/${M}.7)
+info: bin/bus.info
+pdf: bin/bus.pdf
+dvi: bin/bus.dvi
+ps: bin/bus.ps
 
 bin/%.1: doc/man/%.1
 	@echo SED $@
@@ -95,9 +105,39 @@ obj/%-fpic.o: src/%.c src/*.h
 	@mkdir -p obj
 	@${CC} ${FLAGS} -fPIC -c -o $@ ${CPPFLAGS} ${CFLAGS} $<
 
-install: install-bin install-so install-a install-h install-license install-doc
-install-doc: install-man
+bin/%.info: doc/info/%.texinfo
+	@echo MAKEINFO $@
+	@mkdir -p bin
+	@$(MAKEINFO) $<
+	@mv $*.info $@
+
+bin/%.pdf: doc/info/%.texinfo
+	@echo TEXI2PDF $@
+	@! test -d obj/pdf || rm -rf obj/pdf
+	@mkdir -p bin obj/pdf
+	@cd obj/pdf && texi2pdf ../../"$<" < /dev/null
+	@mv obj/pdf/$*.pdf $@
+
+bin/%.dvi: doc/info/%.texinfo
+	@echo TEXI2DVI $@
+	@! test -d obj/dvi || rm -rf obj/dvi
+	@mkdir -p bin obj/dvi
+	@cd obj/dvi && $(TEXI2DVI) ../../"$<" < /dev/null
+	@mv obj/dvi/$*.dvi $@
+
+bin/%.ps: doc/info/%.texinfo
+	@echo TEXI2PS $@
+	@! test -d obj/ps || rm -rf obj/ps
+	@mkdir -p bin obj/ps
+	@cd obj/ps && texi2pdf --ps ../../"$<" < /dev/null
+	@mv obj/ps/$*.ps $@
+
+install: install-bus install-doc
+install-all: install-bus install-man install-info
+install-lib: install-so install-a install-h
+install-doc: install-man install-info install-pdf install-dvi install-ps
 install-man: install-man1 install-man3 install-man5 install-man7
+install-bus: install-bin install-lib install-license
 
 install-bin: bin/bus
 	@echo INSTALL bus
@@ -148,6 +188,22 @@ install-man7: $(foreach M,${MAN7},bin/${M}.7)
 	@install -dm755 -- "${DESTDIR}${MANDIR}/man7"
 	@install -m644 $^ -- "${DESTDIR}${MANDIR}/man7"
 
+install-info: bin/bus.info
+	install -dm755 -- "$(DESTDIR)$(INFODIR)"
+	install -m644 $< -- "$(DESTDIR)$(INFODIR)/$(PKGNAME).info"
+
+install-pdf: bin/bus.pdf
+	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
+	install -m644 $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).pdf"
+
+install-dvi: bin/bus.dvi
+	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
+	install -m644 $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
+
+install-ps: bin/bus.ps
+	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
+	install -m644 $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).ps"
+
 uninstall:
 	-rm -- "${DESTDIR}${BINDIR}/bus"
 	-rm -- "${DESTDIR}${LIBDIR}/libbus.so.${LIB_VERSION}"
@@ -166,12 +222,18 @@ uninstall:
 	-rm -- "${DESTDIR}${MANDIR}/man3/bus_write_timed.3"
 	-rm -- $(foreach M,${MAN5},"${DESTDIR}${MANDIR}/man5/${M}.5")
 	-rm -- $(foreach M,${MAN7},"${DESTDIR}${MANDIR}/man7/${M}.7")
+	-rm -- "$(DESTDIR)$(INFODIR)/$(PKGNAME).info"
+	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).pdf"
+	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
+	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).ps"
 
 clean:
 	@echo cleaning
 	@-rm -rf obj bin
 
-.PHONY: all doc bus man man1 man3 man5 man7 install install-doc install-man install-bin \
-        install-so install-a install-h include-license install-man1 install-man3 \
-        install-man5 install-man7 uninstall clean
+.PHONY: default all doc bin bus lib so a man man1 man3 man5 man7 info pdf dvi \
+        ps install install-all install-doc install-man install-bin install-so \
+        install-a install-h install-lib install-license install-man1 install-bus \
+        install-man3 install-man5 install-man7 install-info install-pdf \
+        install-dvi install-ps uninstall clean
 

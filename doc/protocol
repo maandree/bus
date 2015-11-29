@@ -44,6 +44,5 @@ listen:
 and `V(a)` is done when exiting the scope. It also means that
 these actions [P(a) and V(a)] are undone when the process exits,
 or if the call fails.
-`with V(a)` that `V(a)` is like `with P(a)` that `P(a)` and
-`V(a)` are exchanged.
+`with V(a)` is to `V(a)` as `with P(a)` is to `P(a)`.
 
