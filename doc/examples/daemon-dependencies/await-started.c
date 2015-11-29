@@ -107,7 +107,7 @@ main(int argc_, char *argv_[])
 			if (!WEXITSTATUS(system(arg)))
 				started[i] = 1;
 			else
-			        remaining++;
+				remaining++;
 		}
 	}
 
