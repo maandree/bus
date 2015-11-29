@@ -71,6 +71,7 @@ Texts. A copy of the license is included in the section entitled
 * Overview::                        Brief overview of @command{bus}.
 * Standard::                        How to use @command{bus} properly.
 * Invoking::                        Executing @command{bus}.
+* Interface::                       Using @command{libbus}.
 * Protocol::                        How communication over @command{bus} works internally.
 * Rationale::                       Why @command{bus}?
 * GNU Free Documentation License::  Copying and sharing this manual.
@@ -345,6 +346,271 @@ group identifier or with a group name.
 
 The current ownership of the bus can be retrieved by
 running @command{stat} over the file @var{PATHNAME}.
+
+
+
+@node Interface
+@chapter Interface
+
+To use @command{libbus} in your C program, include the
+header file @file{<bus.h>} and link with the flag
+@option{-lbus}.
+
+With exception to @code{bus_poll} and @code{bus_poll_timed},
+all functions return @code{0} upon successful completion,
+and @code{-1} in case of failure. @code{bus_poll} and
+@code{bus_poll_timed} return @code{NULL} on failure.
+On failure on all functions set @code{errno} to indicate
+what went wrong.
+
+@file{<bus.h>} defines the following functions:
+
+@table @code
+@item int bus_create(const char *file, int flags, char **out_file)
+This function creates a bus with the asscoiated pathname
+specifed by the value of the parameter @code{file}. If
+@code{file} is @code{NULL} a random pathname is selected.
+This pathname adheres to the convention set forth by
+in @ref{Standard}.
+
+If @code{file} is not @code{NULL} the function fails if the
+file already exists if @code{flags} contains @code{BUS_EXCL}.
+Otherwise if @code{file} is not @code{NULL}, the function
+does nothing if the file already exists.
+
+If @code{flags} contains @code{BUS_INTR}, the function fails
+if it is interrupted.
+
+Unless @code{out_file} is NULL, the pathname of the bus
+should be stored in a new char array stored in @code{*out_file}.
+The caller must free the allocated stored in @code{*out_file}.
+
+If the processes cannot allocate enough memory to perform
+the action, the function sets @code{errno} to @code{ENOMEM}
+and fails. It may also fail and set @code{errno} to any of
+the errors specified for the system calls @code{open} and
+@code{write}.
+
+@item int bus_unlink(const char *file)
+This function removes the bus assoicated with the pathname
+stored in the parameter @code{file}. The function also
+unlinks the file.
+
+The function may set @code{errno} to any of the following
+values and fail for the specified reasons:
+@table @code
+@item EINVAL
+The bus does not exist.
+@item EACCES
+Operation permission is denied to the calling process.
+@item EPERM
+The user does not have permission to remove the bus.
+@end table
+@noindent
+It may also fail and set @code{errno} to any of the errors
+specified for the system calls @code{unlink} and @code{open},
+and the functions @code{semget} and @code{shmget}.
+
+@item int bus_open(bus_t *bus, const char *file, int flags)
+This function acquires resources required for the process
+to use the bus associated with the filename stored in the
+parameter @code{file}. The function also stores the resources
+in @code{bus} for use by other @command{bus} functions.
+
+Values for @code{flags} are constructed by a bitwise
+inclusive @sc{or} of flags from the following list.
+@table @code
+@item BUS_RDONLY
+The process will only be using the bus for receiving messages.
+@item BUS_WRONLY
+The process will only be using the bus for sending messages.
+@item BUS_RDWR
+The process will use the bus for both receiving and sending
+messages.
+@end table
+
+The function may set @code{errno} to any of the following
+values and fail for the specified reasons:
+@table @code
+@item ENOMEM
+The process cannot allocate enough memory to perform the
+action.
+@item EACCES
+Operation permission is denied to the calling process.
+@item EINVAL
+The described bus does not exist.
+@end table
+@noindent
+It may also fail and set @code{errno} to any of the errors
+specified for the system call @code{open}.
+
+@item int bus_close(bus_t *bus)
+This function disposes of resources allocated to the
+process, as referenced in the parameter @code{bus}.
+
+The function fails and sets @code{errno} to @code{EINVAL}
+if the bus does not exist.
+
+@item int bus_write(const bus_t *bus, const char *message, int flags)
+This function broadcasts a message on the bus whose
+information is stored in the parameter @code{bus}. The
+message read by the function is stored in the parameter
+@code{message}. It may not exceeed 2048 bytes, including
+NUL termination.
+
+The function shall fail, and set @code{errno} to
+@code{EAGAIN}, if the call would suspend the process and
+@code{flags} contains @code{BUS_NOWAIT}.
+
+The function may fail and set @code{errno} to any of the
+errors specified for the function @code{semop}.
+
+@item int bus_write_timed(const bus_t *bus, const char *message, const struct timespec *timeout, clockid_t clockid)
+This function behaves like @code{bus_write}, except if it
+is not able to write the message within the specified time,
+it will fail and set @code{errno} to @code{EAGAIN}. The
+time is specified as an absolute time using the parameter
+@code{timeout}. The behaviour is unspecified if @code{timeout}
+is @code{NULL}. @code{timeout} is measured with the clock whose
+identifier is specified by the parameter @code{clockid}. This
+clock must be a predicitable clock@footnote{There are probably
+other, undocumented, seemingly arbitrary restrictions too.}.
+
+The function may fail and set @code{errno} to any of the
+errors specified for the functions @code{semop} and
+@code{clock_gettime}.
+
+@item int bus_read(const bus_t *bus, int (*callback)(const char *message, void *user_data), void *user_data)
+This function waits for new message to be sent on the bus
+specified in the @code{bus} parameter, as provieded by a
+previous call to the function @code{bus_open}. Once a
+message is received, the parameter-function @code{callback}
+is invoked. The parameter @code{message} in @code{callback}
+is the received message, and @code{user_data} in
+@code{callback} should be @code{user_data} from @code{bus_read}.
+However, once the function [@code{bus_read}] has ensured
+that it will receive any message sent on the bus, it shall
+invoke the parameter-function @code{callback} with
+@code{message} set to @code{NULL}, to notify the process that
+it can perform any action that requires that it is listening
+on the bus.
+
+After @code{callback} returns, @code{message} may be override.
+Therefore @code{callback} should copy message and start a new
+thread that uses the copy of @code{message}. @code{callback}
+shall return @code{-1} on failure, @code{0} if the function
+[@code{bus_read}] should stop listening, or @code{1} if
+the function should continue listening.
+
+The function may fail and set @code{errno} to any of the
+errors specified for the function @code{semop}.
+
+@item int bus_read_timed(const bus_t *bus, int (*callback)(const char *message, void *user_data), void *user_data, const struct timespec *timeout, clockid_t clockid)
+This function behaves like @code{bus_read}, except it will
+automatically fail and set @code{errno} to @code{EAGAIN} when
+the specified time has passed. The time is specified as an
+absolute time using the parameter @code{timeout}. The
+behaviour is unspecified if @code{timeout} is @code{NULL}.
+@code{timeout} is measured with the clock whose identifier
+is specified by the parameter @code{clockid}. This clock
+must be a predicitable clock@footnote{There are probably
+other, undocumented, seemingly arbitrary restrictions too.}.
+
+The function may fail and set @code{errno} to any of the
+errors specified for the functions @code{semop} and
+@code{clock_gettime}.
+
+@item int bus_poll_start(bus_t *bus)
+@itemx int bus_poll_stop(const bus_t *bus)
+@itemx const char *bus_poll(bus_t *bus, int flags)
+@itemx const char *bus_poll_timed(bus_t *bus, const struct timespec *timeout, clockid_t clockid)
+The function @code{bus_poll} waits for a message to be
+broadcasted on the bus, and return the message it receives.
+The function fails if @code{flags} contains @code{BUS_NOWAIT}
+and there is not already a message waiting on the bus.
+Received messages shall be copied and parsed, and acted
+upon, in a separate thread, and the function @code{bus_poll}
+or the function @code{bus_poll_stop} called again as soon
+as possible.
+
+The funcion @code{bus_poll_start} must be called before
+@code{bus_poll} is called for the first time. When the
+process is done listening on the bus, it must call the
+function @code{bus_poll_stop}.
+
+The function @code{bus_poll_timed} behaves like the function
+@code{bus_poll}, except if it is not able to read a message
+within the specified time, it will fail and set @code{errno}
+to @code{EAGAIN}. The time is specified as an absolute time
+using the parameter @code{timeout}. The behaviour is
+unspecified if @code{timeout} is @code{NULL}. @code{timeout}
+is measured with the clock whose identifier is specified by
+the parameter @code{clockid}. This clock must be a predicitable
+clock@footnote{There are probably other, undocumented,
+seemingly arbitrary restrictions too.}.
+
+Upon successful completion, the functions @code{bus_poll} and
+@code{bus_poll_timed} returns the received message.
+
+These functions may fail and set @code{errno} to any of the
+errors specified for the function @code{semop}. The function
+@code{bus_poll_timed} may also set @code{errno} to any of
+the errors specified for @code{clock_gettime}.
+
+@item int bus_chown(const char *file, uid_t owner, gid_t group)
+This function changes the owner and the group of the bus,
+associated with the file whose pathname is stored in the
+parameter @code{file}, to the owner and group specified by
+the parameters @code{owner} and @code{group}, respectively.
+
+The current ownership of a bus can be retrieved by calling
+@code{stat} over the pathname of the bus.
+
+The function may fail and set @code{errno} to any of the
+errors specified for the functions @code{bus_open},
+@code{chown}, @code{semget}, @code{shmget}, and @code{shmctl}
+as well as any errors specified for the commands
+@code{IPC_STAT} and @code{IPC_SET} for the function
+@code{semctl}.
+
+@item int bus_chmod(const char *file, mode_t mode)
+This function gives access to the bus associated with the
+file whose pathname is stored in the parameter @code{file}
+according to the following rules:
+
+@itemize @bullet{}
+@item
+If @code{mode} contains any of the bits @code{S_IRWXU}
+contains, the owner should be given full access to the
+bus. Otherwise the owner should have no access.
+@item
+If @code{mode} contains any of the bits @code{S_IRWXG}
+contains, the group should be given read and write
+access to the bus. Otherwise the group should have no
+access.
+@item
+If @code{mode} contains any of the bits @code{S_IRWXO}
+contains, users that are neither the owner nor member
+of the group should be given read and write access to
+the bus. Otherwise they should have no access.
+@end itemize
+
+The current permissions of a bus can be retrieved by calling
+@code{stat} over the pathname of the bus.
+
+The function may fail and set @code{errno} to any of the
+errors specified for the functions @code{bus_open},
+@code{chmode}, @code{semget}, @code{shmget}, and @code{shmctl}
+as well as any errors specified for the commands
+@code{IPC_STAT} and @code{IPC_SET} for the function
+@code{semctl}.
+@end table
+
+There is not reason for poking around in @code{bus_t}
+(@code{struct bus}). It should be considered opaque.
+You can read the documentation in @file{<bus.h>} if
+you want to know what is in it.
+
 
 
 
