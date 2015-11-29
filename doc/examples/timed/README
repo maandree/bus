@@ -12,7 +12,7 @@ When you are done run ./cleanup.
 Running instances of ./poll will wait for new messages
 continuously, but with one second timeouts.
 
-./slow-poll works like ./poll, execpt it will sleep
+./slow-poll works like ./poll, except it will sleep
 for one second every time it receives a message.
 
 Running instances of ./read will read for ten seconds

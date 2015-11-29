@@ -13,7 +13,7 @@ more primitive IPC is sufficient, but lets assume there
 are other programs interested in this information too.
 
 To accomplish this, you create a wrapper for amixer
-than broadcasts updates on a bus. This wrapper is
+that broadcasts updates on a bus. This wrapper is
 installed as ~/.local/bin/amixer, and ~/.local/bin/
 is included in $PATH before /usr/bin.
 
