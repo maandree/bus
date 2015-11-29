@@ -23,6 +23,14 @@ MAN3 = bus_create bus_unlink bus_open bus_close bus_read bus_write bus_poll bus_
 MAN5 = bus
 MAN7 = libbus
 
+EXAMPLES = audio-volume-control daemon-depedencies nonblocking telephony-and-music timed
+EXAMPLE_audio-volume-control = amixer cleanup init monitor README
+EXAMPLE_daemon-depedencies = announce.c await-ready.c await-started.c cleanup.c d-network d-ntp \
+                             d-ssh init.c Makefile README require.c start-daemon.c test-daemon.c
+EXAMPLE_nonblocking = cleanup.c init.c Makefile poll.c README write.c
+EXAMPLE_telephony-and-music = cleanup.c end-call.c init.c Makefile monitor.c README receive-or-make-call.c
+EXAMPLE_timed = cleanup.c init.c Makefile poll.c read.c README slow-poll.c write.c
+
 
 FLAGS = -std=c99 -Wall -Wextra -pedantic -O2
 
@@ -30,6 +38,7 @@ LIB_MAJOR = 3
 LIB_MINOR = 1
 LIB_VERSION = ${LIB_MAJOR}.${LIB_MINOR}
 VERSION = 3.1.5
+
 
 
 default: bus man info
@@ -132,10 +141,12 @@ bin/%.ps: doc/info/%.texinfo
 	@cd obj/ps && texi2pdf --ps ../../"$<" < /dev/null
 	@mv obj/ps/$*.ps $@
 
-install: install-bus install-doc
-install-all: install-bus install-man install-info
+
+
+install: install-bus install-man install-info install-examples
+install-all: install-bus install-doc
 install-lib: install-so install-a install-h
-install-doc: install-man install-info install-pdf install-dvi install-ps
+install-doc: install-man install-info install-pdf install-dvi install-ps install-examples
 install-man: install-man1 install-man3 install-man5 install-man7
 install-bus: install-bin install-lib install-license
 
@@ -189,20 +200,32 @@ install-man7: $(foreach M,${MAN7},bin/${M}.7)
 	@install -m644 $^ -- "${DESTDIR}${MANDIR}/man7"
 
 install-info: bin/bus.info
-	install -dm755 -- "$(DESTDIR)$(INFODIR)"
-	install -m644 $< -- "$(DESTDIR)$(INFODIR)/$(PKGNAME).info"
+	@echo INSTALL bus.info
+	@install -dm755 -- "$(DESTDIR)$(INFODIR)"
+	@install -m644 $< -- "$(DESTDIR)$(INFODIR)/$(PKGNAME).info"
 
 install-pdf: bin/bus.pdf
-	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
-	install -m644 $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).pdf"
+	@echo INSTALL bus.pdf
+	@install -dm755 -- "$(DESTDIR)$(DOCDIR)"
+	@install -m644 $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).pdf"
 
 install-dvi: bin/bus.dvi
-	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
-	install -m644 $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
+	@echo INSTALL bus.dvi
+	@install -dm755 -- "$(DESTDIR)$(DOCDIR)"
+	@install -m644 $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
 
 install-ps: bin/bus.ps
-	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
-	install -m644 $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).ps"
+	@echo INSTALL bus.ps
+	@install -dm755 -- "$(DESTDIR)$(DOCDIR)"
+	@install -m644 $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).ps"
+
+install-examples:
+	@echo INSTALL examples
+	@install -dm755 -- $(foreach E,$(EXAMPLES),"$(DESTDIR)$(DOCDIR)/$(PKGNAME)/examples/$(E)")
+	@$(foreach E,$(EXAMPLES),cp -- $(foreach F,$(EXAMPLE_$(E)),doc/examples/$(E)/$(F))  \
+	    "$(DESTDIR)$(DOCDIR)/$(PKGNAME)/examples/$(E)" &&) true
+
+
 
 uninstall:
 	-rm -- "${DESTDIR}${BINDIR}/bus"
@@ -226,14 +249,21 @@ uninstall:
 	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).pdf"
 	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
 	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).ps"
+	-$(foreach E,$(EXAMPLES),rm --  \
+	    $(foreach F,$(EXAMPLE_$(E)),"$(DESTDIR)$(DOCDIR)/$(PKGNAME)/examples/$(E)/$(F)");)
+	-rmdir -- $(foreach E,$(EXAMPLES),"$(DESTDIR)$(DOCDIR)/$(PKGNAME)/examples/$(E)")
+
+
 
 clean:
 	@echo cleaning
 	@-rm -rf obj bin
 
+
+
 .PHONY: default all doc bin bus lib so a man man1 man3 man5 man7 info pdf dvi \
         ps install install-all install-doc install-man install-bin install-so \
         install-a install-h install-lib install-license install-man1 install-bus \
-        install-man3 install-man5 install-man7 install-info install-pdf \
-        install-dvi install-ps uninstall clean
+        install-man3 install-man5 install-man7 install-info install-pdf install-dvi \
+        install-ps install-examples uninstall clean
 
