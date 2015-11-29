@@ -74,6 +74,7 @@ Texts. A copy of the license is included in the section entitled
 * Interface::                       Using @command{libbus}.
 * Protocol::                        How communication over @command{bus} works internally.
 * Rationale::                       Why @command{bus}?
+* Examples::                        Usecase examples and API-demonstration.
 * GNU Free Documentation License::  Copying and sharing this manual.
 @end menu
 @c TODO @detailmenu (`C-c C-u m`)
@@ -679,10 +680,746 @@ exits, or if the call fails.@*
 @node Rationale
 @chapter Rationale
 
-We need an interprocess communication system similar to message queues.
-But we need broadcasting rather than anycasting, so we have a fast,
-simple and daemonless system for announcing events to any processes that
+We need an interprocess communication system similar
+to message queues. But we need broadcasting rather than
+anycasting, so we have a fast, simple and daemonless
+system for announcing events to any processes that
 might be interested.
+
+
+
+@node Examples
+@chapter Examples
+
+This chapter contains usecase examples and
+API-demonstrations. You will find that they are (on
+a standard installation) installed on your system.
+
+@menu
+* Audio-volume control::
+* Telephony and music::
+* Timed::
+* Nonblocking::
+* Daemon-depedencies::
+@end menu
+
+
+
+
+@node Audio-volume control
+@section Audio-volume control
+
+Assume you have program that display the audio volume.
+This program checks every second third if the volume
+have changed.
+
+Also assume that you use @command{amixer} to change the
+volume, most often by using keybindings via @command{xbindkeys}.
+
+To reduce the delay, you want to send a signal to the
+monitor program that the volume have changed. For this
+more primitive IPC is sufficient, but lets assume there
+are other programs interested in this information too.
+
+To accomplish this, you create a wrapper for @command{amixer}
+that broadcasts updates on a bus. This wrapper is
+installed as @command{~/.local/bin/amixer}, and
+@command{~/.local/bin/} is included in @env{$PATH}
+before @command{/usr/bin}.
+@*
+
+@noindent
+Before starting run @command{./init}, this code is
+should be run from your profile file if you want to
+implement this on your system. After running
+@command{./init}, you can start one or more listeners
+by running @command{./alsa-monitor}.
+
+To change the volume run
+@code{./amixer -c 0 -- set Master 5%+} or similar.
+
+When you are done run @command{./cleanup}.
+
+
+@subsubheading @file{./amixer}
+@example
+#!/bin/sh
+/usr/bin/amixer "$@@"
+for arg in "$@@"; do
+  if [ "$@{arg@}" = "set" ]  || \
+     [ "$@{arg@}" = "sset" ] || \
+     [ "$@{arg@}" = "cset" ]; then
+    exec bus broadcast "/tmp/example-bus" '0 volume-changed *'
+  fi
+done
+@end example
+
+
+@subsubheading @file{./cleanup}
+@example
+#!/bin/sh
+exec bus remove "/tmp/example-bus"
+@end example
+
+
+@subsubheading @file{./init}
+@example
+#!/bin/sh
+bus create "/tmp/example-bus"
+
+# @w{@xrm{}The following code is more suitable in the real world,@xtt{}}
+# @w{@xrm{}if used, the other files should use @xtt{}"$@{BUS_AUDIO@}"}
+# @w{@xrm{}instead of @xtt{}"/tmp/example-bus"@xrm{}.@xtt{}}
+# 
+# export BUS_AUDIO="$@{XDG_RUNTIME_DIR@}/bus/audio"
+# if [ ! -f "$@{BUS_AUDIO@}" ]; then
+#   bus create "$@{BUS_AUDIO@}"
+# fi
+@end example
+
+
+@subsubheading @file{./monitor}
+@example
+#!/bin/sh
+if [ $# = 1 ]; then
+  if [ "$(echo "$@{1@}" | cut -d ' ' -f 2)" = "volume-changed" ]; then
+    printf '\e[H\e[2J'
+    amixer get Master
+  fi
+  exit 0
+fi
+
+exec 2>/dev/null
+
+printf '\e[?1049h\e[H\e[2J'
+trap -- "printf '\e[?1049l'" SIGINT
+bus listen "/tmp/example-bus" \'"$@{0/\'/\'\\\'\'@}"\'' "$@{msg@}"'
+@end example
+
+
+
+@node Telephony and music
+@section Telephony and music
+
+Assume you have a music player and a telephony program.
+You might like it if the music player pauses whenever
+you make or receive a call. You may also like it, if
+the music resumed when the call ended.
+
+In this example we will assume you the have @command{mocp}
+(@command{moc} package) running. And we will use the shell to
+simulate a telephony program.
+@*
+
+@noindent
+First of, run make to build this example. Before
+starting run @command{./init}. And when you are
+done run @command{./cleanup}.
+
+In one terminal run @command{./monitor}. This program
+will pause @command{mocp} when you make or receive a call,
+it will also resume @command{mocp} when all calls have
+ended if it did pause @command{mocp}.
+
+Then start any positive number of terminals.
+We will pretend that each of them are telephony
+programs. To make or receive a call, run
+@command{./receive-or-make-call}, when you want to
+end the pretend call, run @command{./end-call} from
+the terminal (or more accurately, from the same
+process.)
+
+
+@subsubheading @file{./Makefile}
+@example
+COMMANDS = init cleanup monitor end-call receive-or-make-call
+
+all: $@{COMMANDS@}
+%: %.c
+        $@{CC@} -Wall -Wextra -pedantic -std=c99 -lbus -o $@@ $<
+clean:
+        -rm $@{COMMANDS@}
+
+.PHONY: all clean
+@end example
+
+
+@subsubheading @file{./cleanup.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+
+int main()
+@{
+  return bus_unlink("/tmp/example-bus") && (perror("cleanup"), 1);
+@}
+@end example
+
+
+@subsubheading @file{./end-call.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdint.h>
+
+#define t(stmt)  if (stmt) goto fail
+
+static char message[BUS_MEMORY_SIZE];
+
+int main()
+@{
+  bus_t bus;
+  sprintf(message, "%ji unforce-pause", (intmax_t)getppid());
+  /* @w{@xrm{}Yes, PPID; in this example we pretend the shell is the telephony process.@xtt{}} */
+  t (bus_open(&bus, "/tmp/example-bus", BUS_WRONLY));
+  t (bus_write(&bus, message, 0));
+  bus_close(&bus);
+  return 0;
+
+fail:
+  perror("end-call");
+  bus_close(&bus);
+  return 1;
+@}
+@end example
+
+
+@subsubheading @file{./init.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+
+int main()
+@{
+  return bus_create("/tmp/example-bus", 0, NULL) && (perror("init"), 1);
+@}
+@end example
+
+
+@subsubheading @file{./monitor.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define t(stmt)  if (stmt) goto fail
+
+static size_t pauser_count = 0;
+static size_t pausers_size = 0;
+static char* pausers = NULL;
+
+static int is_moc_playing(void)
+@{
+  return !WEXITSTATUS(system("env LANG=C mocp -i 2>/dev/null |"
+                             "grep 'State: PLAY' >/dev/null"));
+@}
+
+/* @w{@xrm{}In a proper implementation, message whould be copyied, and then@xtt{}}
+ * @w{@xrm{}a new thread would be created that parsed the copy. But that is@xtt{}}
+ * @w{@xrm{}too much for an example, especially since it would also require@xtt{}}
+ * @w{@xrm{}a mutex to make sure two threads do not modify data at the same@xtt{}}
+ * @w{@xrm{}time, causing chaos.@xtt{}} */
+static int callback(const char *message, void *user_data)
+@{
+  char *msg = NULL;
+  size_t len = 0;
+  if (message == 0)
+    return 1;
+  while ((len < 2047) && message[len])
+    len++;
+  msg = malloc((len + 1) * sizeof(char));
+  t (msg == NULL);
+  memcpy(msg, message, len * sizeof(char));
+  msg[len] = 0;
+  /* @w{@xrm{}BEGIN run as in a separate thread@xtt{}} */
+  if (pauser_count || is_moc_playing()) @{
+    char *begin = strchr(msg, ' ');
+    ssize_t pid;
+    int requests_pause;
+    if (begin == NULL)
+      goto done;
+    *begin++ = 0;
+    pid = (ssize_t)atoll(msg);
+    if (pid < 1) /* @w{@xrm{}We need a real PID, too bad there is@xtt{}}
+                  * @w{@xrm{}no convient way to detect if it dies.@xtt{}} */
+      goto done;
+    if ((strstr(begin, "force-pause ") == begin) ||
+        !strcmp(begin, "force-pause"))
+      requests_pause = 1;
+    else if ((strstr(begin, "unforce-pause ") == begin) ||
+             !strcmp(begin, "unforce-pause"))
+      requests_pause = 0;
+    else
+      goto done;
+    if ((size_t)pid >= pausers_size) @{
+      pausers = realloc(pausers, (size_t)(pid + 1) * sizeof(char));
+      t (pausers == NULL); /* @w{@xrm{}Let's ignore the memory leak.@xtt{}} */
+      memset(pausers + pausers_size, 0,
+             ((size_t)(pid + 1) - pausers_size) * sizeof(char));
+      pausers_size = (size_t)(pid + 1);
+    @}
+    if (pausers[pid] ^ requests_pause) @{
+      pauser_count += requests_pause ? 1 : -1;
+      pausers[pid] = requests_pause;
+      if (pauser_count == (size_t)requests_pause)
+        system(requests_pause ? "mocp -P" : "mocp -U");
+    @}
+  @}
+  /* @w{@xrm{}END run as in a separate thread@xtt{}} */
+  goto done;
+  (void) user_data;
+
+fail:
+  perror("monitor");
+  return -1;
+
+done:
+  free(msg);
+  return 1;
+@}
+
+int main()
+@{
+  bus_t bus;
+  t (bus_open(&bus, "/tmp/example-bus", BUS_RDONLY));
+  t (bus_read(&bus, callback, NULL));
+  bus_close(&bus);
+  free(pausers);
+  return 0;
+
+fail:
+  perror("monitor");
+  bus_close(&bus);
+  free(pausers);
+  return 1;
+@}
+@end example
+
+
+@subsubheading @file{./receive-or-make-call.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdint.h>
+
+#define t(stmt)  if (stmt) goto fail
+
+static char message[BUS_MEMORY_SIZE];
+
+int main()
+@{
+  bus_t bus;
+  sprintf(message, "%ji force-pause", (intmax_t)getppid());
+  /* @w{@xrm{}Yes, PPID; in this example we pretend the shell is the telephony process.@xtt{}} */
+  t (bus_open(&bus, "/tmp/example-bus", BUS_WRONLY));
+  t (bus_write(&bus, message, 0));
+  bus_close(&bus);
+  return 0;
+
+fail:
+  perror("receive-or-make-call");
+  bus_close(&bus);
+  return 1;
+@}
+@end example
+
+
+
+@node Timed
+@section Timed
+
+This example shows how to use timed operations.
+
+First of, run make to build this example.
+
+To start the example run @command{./init}. When you are
+done run @command{./cleanup}.
+
+Running instances of @command{./poll} will wait for new
+messages continuously, but with one second timeouts.
+
+@command{./slow-poll} works like @command{./poll}, except
+it will sleep for one second every time it receives
+a message.
+
+Running instances of @command{./read} will read for ten
+seconds and then time out.
+
+@command{./poll}, @command{./read}, and @command{./slow-poll}
+will stop if the message "stop" is broadcasted.
+
+@command{./write} will wait for atmost a tenth of a
+seconds before failing. This means that if two instances
+of @command{./write} is started at the same time one of
+them will fail if @command{./slow-poll} is running.
+
+@command{./poll}, @command{./read}, @command{./init} and
+@command{./cleanup} are run without any additional
+arguments. @command{./write} is run with the message
+as the second argument.
+
+
+@subsubheading @file{./Makefile}
+@example
+COMMANDS = init cleanup write poll read slow-poll
+
+all: $@{COMMANDS@}
+%: %.c
+        $@{CC@} -Wall -Wextra -pedantic -std=c99 -lbus -o $@@ $<
+clean:
+        -rm $@{COMMANDS@}
+
+.PHONY: all clean
+@end example
+
+
+@subsubheading @file{./cleanup.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+
+int main()
+@{
+  return bus_unlink("/tmp/example-bus") && (perror("cleanup"), 1);
+@}
+@end example
+
+
+@subsubheading @file{./init.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+
+int main()
+@{
+  return bus_create("/tmp/example-bus", 0, NULL) && (perror("init"), 1);
+@}
+@end example
+
+
+@subsubheading @file{./poll.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+
+#define t(stmt)  if (stmt) goto fail
+
+int main()
+@{
+  bus_t bus;
+  const char *message;
+  long long tick = 0;
+  struct timespec timeout;
+  t (bus_open(&bus, "/tmp/example-bus", BUS_RDONLY));
+  t (bus_poll_start(&bus));
+  for (;;) @{
+    t(clock_gettime(CLOCK_MONOTONIC, &timeout));
+    timeout.tv_sec += 1;
+    message = bus_poll_timed(&bus, &timeout, CLOCK_MONOTONIC);
+    if (message == NULL) @{
+      t (errno != EAGAIN);
+      printf("waiting... %lli\n", ++tick);
+      continue;
+    @}
+    tick = 0;
+    message = strchr(message, ' ') + 1;
+    if (!strcmp(message, "stop"))
+      break;
+    printf("\033[01m%s\033[21m\n", message);
+  @}
+  t (bus_poll_stop(&bus));
+  bus_close(&bus);
+  return 0;
+
+fail:
+  perror("poll");
+  bus_poll_stop(&bus);
+  bus_close(&bus);
+  return 1;
+@}
+@end example
+
+
+@subsubheading @file{./read.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+
+#define t(stmt)  if (stmt) goto fail
+
+static int callback(const char *message, void *user_data)
+@{
+  (void) user_data;
+
+  if (message == NULL)
+    return 1;
+
+  message = strchr(message, ' ') + 1;
+  if (!strcmp(message, "stop"))
+    return 0;
+  printf("%s\n", message);
+  return 1;
+@}
+
+int main()
+@{
+  bus_t bus;
+  struct timespec timeout;
+  t (bus_open(&bus, "/tmp/example-bus", BUS_RDONLY));
+  t (clock_gettime(CLOCK_MONOTONIC, &timeout));
+  timeout.tv_sec += 10;
+  t (bus_read_timed(&bus, callback, NULL, &timeout, CLOCK_MONOTONIC));
+  bus_close(&bus);
+  return 0;
+
+fail:
+  perror("poll");
+  bus_poll_stop(&bus);
+  bus_close(&bus);
+  return 1;
+@}
+@end example
+
+
+@subsubheading @file{./slow-poll.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+
+#define t(stmt)  if (stmt) goto fail
+
+int main()
+@{
+  bus_t bus;
+  const char *message;
+  long long tick = 0;
+  struct timespec timeout;
+  t (bus_open(&bus, "/tmp/example-bus", BUS_RDONLY));
+  t (bus_poll_start(&bus));
+  for (;;) @{
+    t (clock_gettime(CLOCK_MONOTONIC, &timeout));
+    timeout.tv_sec += 1;
+    message = bus_poll_timed(&bus, &timeout, CLOCK_MONOTONIC);
+    if (message == NULL) @{
+      t (errno != EAGAIN);
+      printf("waiting... %lli\n", ++tick);
+      continue;
+    @}
+    tick = 0;
+    message = strchr(message, ' ') + 1;
+    if (!strcmp(message, "stop"))
+      break;
+    printf("\033[01m%s\033[21m\n", message);
+    sleep(1);
+  @}
+  t (bus_poll_stop(&bus));
+  bus_close(&bus);
+  return 0;
+
+fail:
+  perror("poll");
+  bus_poll_stop(&bus);
+  bus_close(&bus);
+  return 1;
+@}
+@end example
+
+
+@subsubheading @file{./write.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdint.h>
+
+#define t(stmt)  if (stmt) goto fail
+
+static char message[BUS_MEMORY_SIZE];
+
+int main(int argc, char *argv[])
+@{
+  bus_t bus;
+  struct timespec timeout;
+  if (argc < 2) @{
+    fprintf(stderr, "%s: USAGE: %s message\n", argv[0], argv[0]);
+    return 2;
+  @}
+  sprintf(message, "0 %s", argv[1]);
+  t (bus_open(&bus, "/tmp/example-bus", BUS_WRONLY));
+  t (clock_gettime(CLOCK_MONOTONIC, &timeout));
+  timeout.tv_nsec += 100000000L;
+  t (bus_write_timed(&bus, message, &timeout, CLOCK_MONOTONIC));
+  bus_close(&bus);
+  return 0;
+
+fail:
+  perror("write");
+  bus_close(&bus);
+  return 1;
+@}
+@end example
+
+
+
+@node Nonblocking
+@section Nonblocking
+
+This example shows how to use bus_poll instead of bus_read,
+and how to do non-blocking polling and non-blocking writing.
+
+First of, run make to build this example.
+
+To start the example run @command{./init}. When you are done
+run @command{./cleanup}.
+
+Running instances of @command{./poll} will check every second
+if there is a new inbound message. Between these checks
+@command{./write} will wait for all @command{./poll}:s to
+receive the message. This means that @command{./write} blocks
+while @command{./poll} sleeps. If two or more instances of
+@command{./write} is started at approximately the same time,
+only one will continue to write a message on the bus, the
+others will fail.
+
+@command{./poll} will stop if the message ``stop'' is
+broadcasted.
+
+@command{./poll}, @command{./init} and @command{./cleanup}
+are run without any additional arguments. @command{./write}
+is run with the message as the second argument.
+
+
+@subsubheading @file{./Makefile}
+@example
+COMMANDS = init cleanup write poll
+
+all: $@{COMMANDS@}
+%: %.c
+        $@{CC@} -Wall -Wextra -pedantic -std=c99 -lbus -o $@@ $<
+clean:
+        -rm $@{COMMANDS@}
+
+.PHONY: all clean
+@end example
+
+
+@subsubheading @file{./cleanup.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+
+int main()
+@{
+  return bus_unlink("/tmp/example-bus") && (perror("cleanup"), 1);
+@}
+@end example
+
+
+@subsubheading @file{./init.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+
+int main()
+@{
+  return bus_create("/tmp/example-bus", 0, NULL) && (perror("init"), 1);
+@}
+@end example
+
+
+@subsubheading @file{./poll.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+
+#define t(stmt)  if (stmt) goto fail
+
+int main()
+@{
+  bus_t bus;
+  const char *message;
+  long long tick = 0;
+  t (bus_open(&bus, "/tmp/example-bus", BUS_RDONLY));
+  t (bus_poll_start(&bus));
+  for (;;) @{
+    message = bus_poll(&bus, BUS_NOWAIT);
+    if (message == NULL) @{
+      t (errno != EAGAIN);
+      printf("waiting... %lli\n", ++tick);
+      sleep(1);
+      continue;
+    @}
+    tick = 0;
+    message = strchr(message, ' ') + 1;
+    if (!strcmp(message, "stop"))
+      break;
+    printf("\033[01m%s\033[21m\n", message);
+  @}
+  t (bus_poll_stop(&bus));
+  bus_close(&bus);
+  return 0;
+
+fail:
+  perror("poll");
+  bus_poll_stop(&bus);
+  bus_close(&bus);
+  return 1;
+@}
+@end example
+
+
+@subsubheading @file{./write.c}
+@example
+#include <bus.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdint.h>
+
+#define t(stmt)  if (stmt) goto fail
+
+static char message[BUS_MEMORY_SIZE];
+
+int main(int argc, char *argv[])
+@{
+  bus_t bus;
+  if (argc < 2) @{
+    fprintf(stderr, "%s: USAGE: %s message\n", argv[0], argv[0]);
+    return 2;
+  @}
+  sprintf(message, "0 %s", argv[1]);
+  t (bus_open(&bus, "/tmp/example-bus", BUS_WRONLY));
+  t (bus_write(&bus, message, BUS_NOWAIT));
+  bus_close(&bus);
+  return 0;
+
+fail:
+  perror("write");
+  bus_close(&bus);
+  return 1;
+@}
+@end example
+
+
+
+@node Daemon-depedencies
+@section Daemon-depedencies
+
+TODO
 
 
 

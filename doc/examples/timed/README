@@ -16,7 +16,7 @@ continuously, but with one second timeouts.
 for one second every time it receives a message.
 
 Running instances of ./read will read for ten seconds
-then time out.
+and then time out.
 
 ./poll, ./read, and ./slow-poll will stop if the message
 "stop" is broadcasted.
