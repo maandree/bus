@@ -1,6 +1,6 @@
 Use-case example.
 
-This example shows how bus can be used in a init
+This example shows how bus can be used in an init
 system to provide "aggressivly" parallel startup
 of daemons.
 
