@@ -178,12 +178,12 @@ install-license:
 	@install -m644 LICENSE -- "${DESTDIR}${LICENSEDIR}/${PKGNAME}"
 
 install-man1: $(foreach M,${MAN1},bin/${M}.1)
-	@echo INSTALL $(foreach M,${MAN1},${M}.1)
+	@echo 'INSTALL *.1'
 	@install -dm755 -- "${DESTDIR}${MANDIR}/man1"
 	@install -m644 $^ -- "${DESTDIR}${MANDIR}/man1"
 
 install-man3: $(foreach M,${MAN3},bin/${M}.3)
-	@echo INSTALL $(foreach M,${MAN3},${M}.3)
+	@echo 'INSTALL *.3'
 	@install -dm755 -- "${DESTDIR}${MANDIR}/man3"
 	@install -m644 $^ -- "${DESTDIR}${MANDIR}/man3"
 	@ln -sf -- "bus_poll.3" "${DESTDIR}${MANDIR}/man3/bus_poll_start.3"
@@ -193,12 +193,12 @@ install-man3: $(foreach M,${MAN3},bin/${M}.3)
 	@ln -sf -- "bus_write.3" "${DESTDIR}${MANDIR}/man3/bus_write_timed.3"
 
 install-man5: $(foreach M,${MAN5},bin/${M}.5)
-	@echo INSTALL $(foreach M,${MAN5},${M}.5)
+	@echo 'INSTALL *.5'
 	@install -dm755 -- "${DESTDIR}${MANDIR}/man5"
 	@install -m644 $^ -- "${DESTDIR}${MANDIR}/man5"
 
 install-man7: $(foreach M,${MAN7},bin/${M}.7)
-	@echo INSTALL $(foreach M,${MAN7},${M}.7)
+	@echo 'INSTALL *.7'
 	@install -dm755 -- "${DESTDIR}${MANDIR}/man7"
 	@install -m644 $^ -- "${DESTDIR}${MANDIR}/man7"
 
