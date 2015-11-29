@@ -20,8 +20,11 @@ function waits for new message to be sent on the bus specified in
 function.  Once a message is received, the \fIcallback\fP function is
 invoked.  The \fImessage\fP argument to the callback is the received
 message, and \fIuser_data\fP for \fIcallback\fP should be
-\fIuser_data\fP from \fIbus_read\fP.  However, once \fIbus_read\fP has
-ensured that it will receive any message sent on the bus, it shall
+\fIuser_data\fP from
+.BR bus_read ().
+However, once
+.BR bus_read ()
+has ensured that it will receive any message sent on the bus, it shall
 invoke the \fIcallback\fP function with \fImessage\fP set to \fINULL\fP,
 to notify the process that it can perform any action that requires that
 it is listening on the bus.
@@ -40,8 +43,8 @@ The
 function behaves like
 .BR bus_read (),
 except it will automatically fail and set \fIerrno\fP to \fBEAGAIN\fP
-when the time specified specified time has passed. The time is specified
-as an absolute time using the parameter \fItimeout\fP.  The behaviour is
+when the specified time has passed. The time is specified as an
+absolute time using the parameter \fItimeout\fP.  The behaviour is
 unspecified if \fItimeout\fP is \fINULL\fP.  \fItimeout\fP is measured
 with the clock whose ID is specified by the \fIclockid\fP parameter.
 This clock must be a predicitable clock.
