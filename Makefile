@@ -188,6 +188,9 @@ install-man3: $(foreach M,${MAN3},bin/${M}.3)
 	@install -m644 $^ -- "${DESTDIR}${MANDIR}/man3"
 	@ln -sf -- "bus_poll.3" "${DESTDIR}${MANDIR}/man3/bus_poll_start.3"
 	@ln -sf -- "bus_poll.3" "${DESTDIR}${MANDIR}/man3/bus_poll_stop.3"
+	@ln -sf -- "bus_poll.3" "${DESTDIR}${MANDIR}/man3/bus_poll_timed.3"
+	@ln -sf -- "bus_read.3" "${DESTDIR}${MANDIR}/man3/bus_read_timed.3"
+	@ln -sf -- "bus_write.3" "${DESTDIR}${MANDIR}/man3/bus_write_timed.3"
 
 install-man5: $(foreach M,${MAN5},bin/${M}.5)
 	@echo INSTALL $(foreach M,${MAN5},${M}.5)
