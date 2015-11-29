@@ -37,7 +37,7 @@ FLAGS = -std=c99 -Wall -Wextra -pedantic -O2
 LIB_MAJOR = 3
 LIB_MINOR = 1
 LIB_VERSION = ${LIB_MAJOR}.${LIB_MINOR}
-VERSION = 3.1.5
+VERSION = 3.1.6
 
 
 
