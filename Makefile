@@ -23,9 +23,9 @@ MAN3 = bus_create bus_unlink bus_open bus_close bus_read bus_write bus_poll bus_
 MAN5 = bus
 MAN7 = libbus
 
-EXAMPLES = audio-volume-control daemon-depedencies nonblocking telephony-and-music timed
+EXAMPLES = audio-volume-control daemon-dependencies nonblocking telephony-and-music timed
 EXAMPLE_audio-volume-control = amixer cleanup init monitor README
-EXAMPLE_daemon-depedencies = announce.c await-ready.c await-started.c cleanup.c d-network d-ntp \
+EXAMPLE_daemon-dependencies = announce.c await-ready.c await-started.c cleanup.c d-network d-ntp \
                              d-ssh init.c Makefile README require.c start-daemon.c test-daemon.c
 EXAMPLE_nonblocking = cleanup.c init.c Makefile poll.c README write.c
 EXAMPLE_telephony-and-music = cleanup.c end-call.c init.c Makefile monitor.c README receive-or-make-call.c

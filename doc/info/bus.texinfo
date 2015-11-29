@@ -700,7 +700,7 @@ a standard installation) installed on your system.
 * Telephony and music::
 * Timed::
 * Nonblocking::
-* Daemon-depedencies::
+* Daemon-dependencies::
 @end menu
 
 
@@ -1416,8 +1416,8 @@ fail:
 
 
 
-@node Daemon-depedencies
-@section Daemon-depedencies
+@node Daemon-dependencies
+@section Daemon-dependencies
 
 TODO
 
