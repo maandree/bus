@@ -35,7 +35,7 @@ SEE ALSO
 	libshr(7), cmdipc(1), msgctl(3), semctl(3), shmctl(3), mqueue.h(0),
 	semaphore.h(0), sem_overview(7), mmap(3), pipe(3), socketpair(3),
 	socket(3), unix(7), cmsg(3), kill(3), eventfd(2),  memfd_create(2),
-	pthread_mutex_destroy(3), pthread_rwlock_destroy(3), futux(7),
+	pthread_mutex_destroy(3), pthread_rwlock_destroy(3), futex(7),
 	pthread_spin_destroy(3), pthread_cond_destroy(3), lockf(3), flock(2),
 	fcntl(3), ioctl(3), mkfifo(3), rendezvous(2), 9p(2), libdoor(3),
 	python-bus
