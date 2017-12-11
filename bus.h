@@ -1,26 +1,4 @@
-/**
- * MIT/X Consortium License
- * 
- * Copyright © 2015  Mattias Andrée <maandree@member.fsf.org>
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
- */
+/* See LICENSE file for copyright and license details. */
 #ifndef BUS_H
 #define BUS_H
 
@@ -130,8 +108,8 @@ typedef struct bus
  * @param   out_file  Output parameter for the pathname of the bus
  * @return            0 on success, -1 on error
  */
-int bus_create(const char *restrict, int, char **restrict)
-	BUS_COMPILER_GCC(__attribute__((__warn_unused_result__)));
+BUS_COMPILER_GCC(__attribute__((__warn_unused_result__)))
+int bus_create(const char *restrict, int, char **restrict);
 
 /**
  * Remove a bus
@@ -139,8 +117,8 @@ int bus_create(const char *restrict, int, char **restrict)
  * @param   file  The pathname of the bus
  * @return        0 on success, -1 on error
  */
-int bus_unlink(const char *)
-	BUS_COMPILER_GCC(__attribute__((__nonnull__)));
+BUS_COMPILER_GCC(__attribute__((__nonnull__)))
+int bus_unlink(const char *);
 
 
 /**
@@ -152,8 +130,8 @@ int bus_unlink(const char *)
  *                 the value must not be negative
  * @return         0 on success, -1 on error
  */
-int bus_open(bus_t *restrict, const char *restrict, int)
-	BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)));
+BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)))
+int bus_open(bus_t *restrict, const char *restrict, int);
 
 /**
  * Close a bus
@@ -161,8 +139,8 @@ int bus_open(bus_t *restrict, const char *restrict, int)
  * @param   bus  Bus information
  * @return       0 on success, -1 on error
  */
-int bus_close(bus_t *)
-	BUS_COMPILER_GCC(__attribute__((__nonnull__)));
+BUS_COMPILER_GCC(__attribute__((__nonnull__)))
+int bus_close(bus_t *);
 
 
 /**
@@ -176,8 +154,8 @@ int bus_close(bus_t *)
  *                   procedure
  * @return           0 on success, -1 on error
  */
-int bus_write(const bus_t *, const char *, int)
-	BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)));
+BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)))
+int bus_write(const bus_t *, const char *, int);
 
 /**
  * Broadcast a message on a bus
@@ -191,8 +169,8 @@ int bus_write(const bus_t *, const char *, int)
  *                   it most be a predictable clock
  * @return           0 on success, -1 on error
  */
-int bus_write_timed(const bus_t *, const char *, const struct timespec *, clockid_t)
-	BUS_COMPILER_GCC(__attribute__((__nonnull__(1, 2), __warn_unused_result__)));
+BUS_COMPILER_GCC(__attribute__((__nonnull__(1, 2), __warn_unused_result__)))
+int bus_write_timed(const bus_t *, const char *, const struct timespec *, clockid_t);
 
 
 /**
@@ -218,8 +196,8 @@ int bus_write_timed(const bus_t *, const char *, const struct timespec *, clocki
  * @param   user_data               Parameter passed to `callback`
  * @return                          0 on success, -1 on error
  */
-int bus_read(const bus_t *restrict, int (*)(const char *, void *), void *)
-	BUS_COMPILER_GCC(__attribute__((__nonnull__(1, 2), __warn_unused_result__)));
+BUS_COMPILER_GCC(__attribute__((__nonnull__(1, 2), __warn_unused_result__)))
+int bus_read(const bus_t *restrict, int (*)(const char *, void *), void *);
 
 /**
  * Listen (in a loop, forever) for new message on a bus
@@ -249,9 +227,9 @@ int bus_read(const bus_t *restrict, int (*)(const char *, void *), void *)
  *                                  it most be a predictable clock
  * @return                          0 on success, -1 on error
  */
+BUS_COMPILER_GCC(__attribute__((__nonnull__(1, 2), __warn_unused_result__)))
 int bus_read_timed(const bus_t *restrict, int (*)(const char *, void *),
-                   void *, const struct timespec *, clockid_t)
-	BUS_COMPILER_GCC(__attribute__((__nonnull__(1, 2), __warn_unused_result__)));
+                   void *, const struct timespec *, clockid_t);
 
 
 /**
@@ -265,8 +243,8 @@ int bus_read_timed(const bus_t *restrict, int (*)(const char *, void *),
  * @param   bus  Bus information
  * @return       0 on success, -1 on error
  */
-int bus_poll_start(bus_t *)
-	BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)));
+BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)))
+int bus_poll_start(bus_t *);
 
 /**
  * Announce that the thread has stopped listening on the bus.
@@ -276,8 +254,8 @@ int bus_poll_start(bus_t *)
  * @param   bus  Bus information
  * @return       0 on success, -1 on error
  */
-int bus_poll_stop(const bus_t *)
-	BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)));
+BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)))
+int bus_poll_stop(const bus_t *);
 
 /**
  * Wait for a message to be broadcasted on the bus.
@@ -292,8 +270,8 @@ int bus_poll_stop(const bus_t *)
  *                 `EAGAIN` if there isn't already a message available on the bus
  * @return         The received message, `NULL` on error
  */
-const char *bus_poll(bus_t *, int)
-	BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)));
+BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)))
+const char *bus_poll(bus_t *, int);
 
 /**
  * Wait for a message to be broadcasted on the bus.
@@ -310,8 +288,8 @@ const char *bus_poll(bus_t *, int)
  *                   it most be a predictable clock
  * @return           The received message, `NULL` on error
  */
-const char *bus_poll_timed(bus_t *, const struct timespec *, clockid_t)
-	BUS_COMPILER_GCC(__attribute__((__nonnull__(1), __warn_unused_result__)));
+BUS_COMPILER_GCC(__attribute__((__nonnull__(1), __warn_unused_result__)))
+const char *bus_poll_timed(bus_t *, const struct timespec *, clockid_t);
 
 
 /**
@@ -324,8 +302,8 @@ const char *bus_poll_timed(bus_t *, const struct timespec *, clockid_t)
  * @param   group  The group ID of the bus's new group
  * @return         0 on success, -1 on error
  */
-int bus_chown(const char *, uid_t, gid_t)
-	BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)));
+BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)))
+int bus_chown(const char *, uid_t, gid_t);
 
 /**
  * Change the permissions for a bus
@@ -338,8 +316,8 @@ int bus_chown(const char *, uid_t, gid_t)
  *                edit the bus's associated file
  * @return        0 on success, -1 on error
  */
-int bus_chmod(const char *, mode_t)
-	BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)));
+BUS_COMPILER_GCC(__attribute__((__nonnull__, __warn_unused_result__)))
+int bus_chmod(const char *, mode_t);
 
 
 

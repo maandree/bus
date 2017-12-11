@@ -1,44 +1,24 @@
-/**
- * MIT/X Consortium License
- * 
- * Copyright © 2015  Mattias Andrée <maandree@member.fsf.org>
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
- */
+/* See LICENSE file for copyright and license details. */
 #include "bus.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <errno.h>
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
 #include <grp.h>
 #include <pwd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include "arg.h"
 
 
 
 /**
  * Statement wrapper that goes to `fail` on failure
  */
-#define t(inst)  if ((inst) == -1)  goto fail
+#define t(inst) do { if ((inst) == -1) goto fail; } while (0)
 
 
 
@@ -111,9 +91,9 @@ spawn_break(const char *message, void *user_data)
 static int
 parse_mode(const char *str, mode_t *andnot, mode_t *or)
 {
-#define U  S_IRWXU
-#define G  S_IRWXG
-#define O  S_IRWXO
+#define U S_IRWXU
+#define G S_IRWXG
+#define O S_IRWXO
 	const char *s = str;
 	int numerical = 1;
 	mode_t mode = 0;
@@ -306,114 +286,91 @@ parse_owner(char *str, uid_t *uid, gid_t *gid)
 int
 main(int argc, char *argv[])
 {
+	int xflag = 0;
+	int nflag = 0;
 	bus_t bus;
 	char *file;
 	struct stat attr;
 	uid_t uid;
 	gid_t gid;
 	mode_t mode_andnot, mode_or;
-	int opt_x = 0, opt_n = 0;
-	const char *arg;
-	char **nonoptv = alloca((size_t)argc * sizeof(char*));
-	int nonoptc = 0;
-
-	argv0 = *argv++;
-	argc--;
 
 	/* Parse arguments. */
-	while (argc) {
-		if (!strcmp(*argv, "--")) {
-			argv++;
-			argc--;
-			break;
-		} else if (**argv == '-') {
-			arg = *argv++;
-			argc--;
-			for (arg++; *arg; arg++) {
-				if (*arg == 'x')
-					opt_x = 1;
-				else if (*arg == 'n')
-					opt_n = 1;
-				else
-					return -2;
-			}
-		} else {
-			*nonoptv++ = *argv++;
-			nonoptc++;
-			argc--;
-		}
-	}
-	while (argc) {
-		*nonoptv++ = *argv++;
-		nonoptc++;
-		argc--;
-	}
-	nonoptv -= nonoptc;
+	ARGBEGIN {
+	case 'x':
+		xflag = 1;
+		break;
+	case 'n':
+		nflag = 1;
+		break;
+	default:
+		return 2;
+	} ARGEND;
 
 	/* Check options. */
-	if (opt_x && strcmp(nonoptv[0], "create") && (nonoptc != 2))
+	if (xflag && strcmp(argv[0], "create") && (argc != 2))
 		return 2;
-	if (opt_n && strcmp(nonoptv[0], "broadcast") && (nonoptc != 3))
+	if (nflag && strcmp(argv[0], "broadcast") && (argc != 3))
 		return 2;
 
 	/* Create a new bus with selected name. */
-	if ((nonoptc == 2) && !strcmp(nonoptv[0], "create")) {
-		t(bus_create(nonoptv[1], opt_x * BUS_EXCL, NULL));
+	if ((argc == 2) && !strcmp(argv[0], "create")) {
+		t(bus_create(argv[1], xflag * BUS_EXCL, NULL));
 
 	/* Create a new bus with random name. */
-	} else if ((nonoptc == 1) && !strcmp(nonoptv[0], "create")) {
+	} else if ((argc == 1) && !strcmp(argv[0], "create")) {
 		t(bus_create(NULL, 0, &file));
 		printf("%s\n", file);
 		free(file);
 
 	/* Remove a bus. */
-	} else if ((nonoptc == 2) && !strcmp(nonoptv[0], "remove")) {
-		t(bus_unlink(nonoptv[1]));
+	} else if ((argc == 2) && !strcmp(argv[0], "remove")) {
+		t(bus_unlink(argv[1]));
 
 	/* Listen on a bus in a loop. */
-	} else if ((nonoptc == 3) && !strcmp(nonoptv[0], "listen")) {
-		command = nonoptv[2];
-		t(bus_open(&bus, nonoptv[1], BUS_RDONLY));
+	} else if ((argc == 3) && !strcmp(argv[0], "listen")) {
+		command = argv[2];
+		t(bus_open(&bus, argv[1], BUS_RDONLY));
 		t(bus_read(&bus, spawn_continue, NULL));
 		t(bus_close(&bus));
 
 	/* Listen on a bus for one message. */
-	} else if ((nonoptc == 3) && !strcmp(nonoptv[0], "wait")) {
-		command = nonoptv[2];
-		t(bus_open(&bus, nonoptv[1], BUS_RDONLY));
+	} else if ((argc == 3) && !strcmp(argv[0], "wait")) {
+		command = argv[2];
+		t(bus_open(&bus, argv[1], BUS_RDONLY));
 		t(bus_read(&bus, spawn_break, NULL));
 		t(bus_close(&bus));
 
 	/* Broadcast a message on a bus. */
-	} else if ((nonoptc == 3) && !strcmp(nonoptv[0], "broadcast")) {
-		t(bus_open(&bus, nonoptv[1], BUS_WRONLY));
-		t(bus_write(&bus, nonoptv[2], opt_n * BUS_NOWAIT));
+	} else if ((argc == 3) && !strcmp(argv[0], "broadcast")) {
+		t(bus_open(&bus, argv[1], BUS_WRONLY));
+		t(bus_write(&bus, argv[2], nflag * BUS_NOWAIT));
 		t(bus_close(&bus));
 
 	/* Change permissions. */
-	} else if ((nonoptc == 3) && !strcmp(nonoptv[0], "chmod")) {
-		t(parse_mode(nonoptv[1], &mode_andnot, &mode_or));
-		t(stat(nonoptv[2], &attr));
+	} else if ((argc == 3) && !strcmp(argv[0], "chmod")) {
+		t(parse_mode(argv[1], &mode_andnot, &mode_or));
+		t(stat(argv[2], &attr));
 		attr.st_mode &= ~mode_andnot;
 		attr.st_mode |= mode_or;
-		t(bus_chmod(nonoptv[2], attr.st_mode));
+		t(bus_chmod(argv[2], attr.st_mode));
 
 	/* Change ownership. */
-	} else if ((nonoptc == 3) && !strcmp(nonoptv[0], "chown")) {
-		if (strchr(nonoptv[1], ':')) {
-			t(parse_owner(nonoptv[1], &uid, &gid));
-			t(bus_chown(nonoptv[2], uid, gid));
+	} else if ((argc == 3) && !strcmp(argv[0], "chown")) {
+		if (strchr(argv[1], ':')) {
+			t(parse_owner(argv[1], &uid, &gid));
+			t(bus_chown(argv[2], uid, gid));
 		} else {
-			t(parse_owner(nonoptv[1], &uid, NULL));
-			t(stat(nonoptv[2], &attr));
-			t(bus_chown(nonoptv[2], uid, attr.st_gid));
+			t(parse_owner(argv[1], &uid, NULL));
+			t(stat(argv[2], &attr));
+			t(bus_chown(argv[2], uid, attr.st_gid));
 		}
 
 	/* Change group. */
-	} else if ((nonoptc == 3) && !strcmp(nonoptv[0], "chgrp")) {
-		t(parse_owner(nonoptv[1], NULL, &gid));
-		t(stat(nonoptv[2], &attr));
-		t(bus_chown(nonoptv[2], attr.st_uid, gid));
+	} else if ((argc == 3) && !strcmp(argv[0], "chgrp")) {
+		t(parse_owner(argv[1], NULL, &gid));
+		t(stat(argv[2], &attr));
+		t(bus_chown(argv[2], attr.st_uid, gid));
 
 	} else
 		return 2;
@@ -421,9 +378,8 @@ main(int argc, char *argv[])
 	return 0;
 
 fail:
-	if (errno == 0)
+	if (!errno)
 		return 2;
 	perror(argv0);
 	return 1;
 }
-

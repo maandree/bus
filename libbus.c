@@ -1,45 +1,19 @@
-/**
- * MIT/X Consortium License
- * 
- * Copyright © 2015  Mattias Andrée <maandree@member.fsf.org>
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
- */
-#define _XOPEN_SOURCE 700
-#define _GNU_SOURCE
+/* See LICENSE file for copyright and license details. */
 #include "bus.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-#include <errno.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <time.h>
 
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/shm.h>
-
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <time.h>
+#include <unistd.h>
 
 
 #ifdef BUS_SEMAPHORES_ARE_SYNCHRONOUS_ME_EVEN_HARDER
@@ -52,7 +26,6 @@
 #  define BUS_SEMAPHORES_ARE_SYNCHRONOUS
 # endif
 #endif
-
 
 
 /**
@@ -79,14 +52,14 @@
 /**
  * Semaphore used to notify `bus_read` that it may restore `S`
  */
-#define N  4
+# define N  4
 
 /**
  * The number of semaphores in the semaphore array
  */
-#define BUS_SEMAPHORES  5
+# define BUS_SEMAPHORES  5
 #else
-#define BUS_SEMAPHORES  4
+# define BUS_SEMAPHORES  4
 #endif
 
 /**
@@ -197,8 +170,12 @@
  */
 #define DELTA \
 	do { \
-		if (absolute_time_to_delta_time(&delta, timeout, clockid) < 0)  goto fail; \
-		else if ((delta.tv_sec < 0) || (delta.tv_nsec < 0))  { errno = EAGAIN; goto fail; } \
+		if (absolute_time_to_delta_time(&delta, timeout, clockid) < 0) { \
+			goto fail; \
+		} else if ((delta.tv_sec < 0) || (delta.tv_nsec < 0)) { \
+			errno = EAGAIN; \
+			goto fail; \
+		}\
 	} while (0)
 
 
@@ -206,7 +183,7 @@
  * If `flags & (bus_flag)`, this macro evalutes to `sys_flag`,
  * otherwise this macro evalutes to 0.
  */
-#define F(bus_flag, sys_flag)  \
+#define F(bus_flag, sys_flag) \
 	((flags & (bus_flag)) ? sys_flag : 0)
 
 
@@ -215,7 +192,7 @@
  * Statement wrapper that goes to `fail` on failure
  */
 #define t(inst) \
-	if ((inst) == -1)  goto fail
+	do { if ((inst) == -1) goto fail; } while (0)
 
 
 
@@ -1194,4 +1171,3 @@ bus_chmod(const char *file, mode_t mode)
 fail:
 	return -1;
 }
-
