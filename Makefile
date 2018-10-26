@@ -41,7 +41,7 @@ install: bus libbus.a libbus.so
 	mkdir -p -- "$(DESTDIR)$(PREFIX)/bin"
 	mkdir -p -- "$(DESTDIR)$(PREFIX)/lib"
 	mkdir -p -- "$(DESTDIR)$(PREFIX)/include"
-	mkdir -p -- "$(DESTDIR)$(PREFIX)/licenses/bus"
+	mkdir -p -- "$(DESTDIR)$(PREFIX)/share/licenses/bus"
 	mkdir -p -- "$(DESTDIR)$(MANPREFIX)/man1"
 	mkdir -p -- "$(DESTDIR)$(MANPREFIX)/man3"
 	mkdir -p -- "$(DESTDIR)$(MANPREFIX)/man5"
@@ -50,7 +50,7 @@ install: bus libbus.a libbus.so
 	cp -- libbus.a  "$(DESTDIR)$(PREFIX)/lib"
 	cp -- libbus.so "$(DESTDIR)$(PREFIX)/lib/libbus.so.$(LIB_VERSION)"
 	cp -- bus.h     "$(DESTDIR)$(PREFIX)/include"
-	cp -- LICENSE   "$(DESTDIR)$(PREFIX)/licenses/bus"
+	cp -- LICENSE   "$(DESTDIR)$(PREFIX)/share/licenses/bus"
 	ln -sf -- libbus.so.$(LIB_VERSION) "$(DESTDIR)$(PREFIX)/lib/libbus.so.$(LIB_MAJOR)"
 	ln -sf -- libbus.so.$(LIB_VERSION) "$(DESTDIR)$(PREFIX)/lib/libbus.so"
 	cp -- $(MAN1) "$(DESTDIR)$(MANPREFIX)/man1"
@@ -70,7 +70,7 @@ uninstall:
 	-rm -f  -- "$(DESTDIR)$(PREFIX)/lib/libbus.so.$(LIB_MAJOR)"
 	-rm -f  -- "$(DESTDIR)$(PREFIX)/lib/libbus.so"
 	-rm -f  -- "$(DESTDIR)$(PREFIX)/include/bus.h"
-	-rm -rf -- "$(DESTDIR)$(PREFIX)/licenses/bus"
+	-rm -rf -- "$(DESTDIR)$(PREFIX)/share/licenses/bus"
 	-cd "$(DESTDIR)$(MANPREFIX)/man1" && rm -f -- $(MAN1)
 	-cd "$(DESTDIR)$(MANPREFIX)/man3" && rm -f -- $(MAN3)
 	-cd "$(DESTDIR)$(MANPREFIX)/man5" && rm -f -- $(MAN5)
