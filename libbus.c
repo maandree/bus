@@ -196,7 +196,7 @@
 
 
 
-#ifdef _SEM_SEMUN_UNDEFINED
+#ifndef SEMUN_ALREADY_DEFINED
 union semun {
 	int val;
 	struct semid_ds *buf;
