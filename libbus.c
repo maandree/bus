@@ -670,6 +670,10 @@ bus_open(bus_t *restrict bus, const char *restrict file, int flags)
 
 	f = fopen(file, "r");
 
+	if (f == NULL) {
+		goto fail;
+	}
+
 	t(getline(&line, &len, f));
 	t(bus->key_sem = (key_t)atoll(line));
 	free(line), line = NULL, len = 0;
@@ -684,6 +688,7 @@ bus_open(bus_t *restrict bus, const char *restrict file, int flags)
 		t(open_semaphores(bus));
 		t(open_shared_memory(bus, flags));
 	}
+
 	return 0;
 fail:
 	saved_errno = errno;
