@@ -669,10 +669,8 @@ bus_open(bus_t *restrict bus, const char *restrict file, int flags)
 	bus->message = NULL;
 
 	f = fopen(file, "r");
-
-	if (f == NULL) {
+	if (!f)
 		goto fail;
-	}
 
 	t(getline(&line, &len, f));
 	t(bus->key_sem = (key_t)atoll(line));
