@@ -857,7 +857,7 @@ COMMANDS = init cleanup monitor end-call receive-or-make-call
 
 all: $@{COMMANDS@}
 %: %.c
-        $@{CC@} -Wall -Wextra -pedantic -std=c99 -lbus -o $@@ $<
+        $@{CC@} -Wall -Wextra -pedantic -lbus -o $@@ $<
 clean:
         -rm $@{COMMANDS@}
 
@@ -1087,7 +1087,7 @@ COMMANDS = init cleanup write poll read slow-poll
 
 all: $@{COMMANDS@}
 %: %.c
-        $@{CC@} -Wall -Wextra -pedantic -std=c99 -lbus -o $@@ $<
+        $@{CC@} -Wall -Wextra -pedantic -lbus -o $@@ $<
 clean:
         -rm $@{COMMANDS@}
 
@@ -1326,7 +1326,7 @@ COMMANDS = init cleanup write poll
 
 all: $@{COMMANDS@}
 %: %.c
-        $@{CC@} -Wall -Wextra -pedantic -std=c99 -lbus -o $@@ $<
+        $@{CC@} -Wall -Wextra -pedantic -lbus -o $@@ $<
 clean:
         -rm $@{COMMANDS@}
 
@@ -1461,7 +1461,7 @@ COMMANDS = announce await-ready await-started cleanup  \
 
 all: $@{COMMANDS@}
 %: %.c
-        $@{CC@} -Wall -Wextra -pedantic -std=c99 -lbus -o $@@ $<
+        $@{CC@} -Wall -Wextra -pedantic -lbus -o $@@ $<
 clean:
         -rm $@{COMMANDS@}
         -rm -r run

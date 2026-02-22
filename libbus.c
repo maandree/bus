@@ -180,8 +180,8 @@
 
 
 /**
- * If `flags & (bus_flag)`, this macro evalutes to `sys_flag`,
- * otherwise this macro evalutes to 0.
+ * If `flags & (bus_flag)`, this macro evaluates to `sys_flag`,
+ * otherwise this macro evaluates to 0.
  */
 #define F(bus_flag, sys_flag) \
 	((flags & (bus_flag)) ? sys_flag : 0)
